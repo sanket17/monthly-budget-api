@@ -106,55 +106,55 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Pending | Pending |
-| AUTH-02 | Pending | Pending |
-| AUTH-03 | Pending | Pending |
-| AUTH-04 | Pending | Pending |
-| AUTH-05 | Pending | Pending |
-| BUDG-01 | Pending | Pending |
-| BUDG-02 | Pending | Pending |
-| BUDG-03 | Pending | Pending |
-| BUDG-04 | Pending | Pending |
-| BUDG-05 | Pending | Pending |
-| BUDG-06 | Pending | Pending |
-| BUDG-07 | Pending | Pending |
-| BUDG-08 | Pending | Pending |
-| TXNS-01 | Pending | Pending |
-| TXNS-02 | Pending | Pending |
-| TXNS-03 | Pending | Pending |
-| TXNS-04 | Pending | Pending |
-| TXNS-05 | Pending | Pending |
-| TXNS-06 | Pending | Pending |
-| TXNS-07 | Pending | Pending |
-| RECR-01 | Pending | Pending |
-| RECR-02 | Pending | Pending |
-| RECR-03 | Pending | Pending |
-| RECR-04 | Pending | Pending |
-| RECR-05 | Pending | Pending |
-| CARD-01 | Pending | Pending |
-| CARD-02 | Pending | Pending |
-| CARD-03 | Pending | Pending |
-| CARD-04 | Pending | Pending |
-| CARD-05 | Pending | Pending |
-| BALN-01 | Pending | Pending |
-| BALN-02 | Pending | Pending |
-| BALN-03 | Pending | Pending |
-| BALN-04 | Pending | Pending |
-| BALN-05 | Pending | Pending |
-| BALN-06 | Pending | Pending |
-| DASH-01 | Pending | Pending |
-| DASH-02 | Pending | Pending |
-| DASH-03 | Pending | Pending |
-| DASH-04 | Pending | Pending |
-| DASH-05 | Pending | Pending |
-| DASH-06 | Pending | Pending |
-| DASH-07 | Pending | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| BUDG-01 | Phase 2 | Pending |
+| BUDG-02 | Phase 2 | Pending |
+| BUDG-03 | Phase 2 | Pending |
+| BUDG-04 | Phase 2 | Pending |
+| BUDG-05 | Phase 2 | Pending |
+| BUDG-06 | Phase 2 | Pending |
+| BUDG-07 | Phase 2 | Pending |
+| BUDG-08 | Phase 2 | Pending |
+| TXNS-01 | Phase 3 | Pending |
+| TXNS-02 | Phase 3 | Pending |
+| TXNS-03 | Phase 3 | Pending |
+| TXNS-04 | Phase 3 | Pending |
+| TXNS-05 | Phase 3 | Pending |
+| TXNS-06 | Phase 3 | Pending |
+| TXNS-07 | Phase 3 | Pending |
+| RECR-01 | Phase 6 | Pending |
+| RECR-02 | Phase 6 | Pending |
+| RECR-03 | Phase 6 | Pending |
+| RECR-04 | Phase 6 | Pending |
+| RECR-05 | Phase 6 | Pending |
+| CARD-01 | Phase 4 | Pending |
+| CARD-02 | Phase 4 | Pending |
+| CARD-03 | Phase 4 | Pending |
+| CARD-04 | Phase 4 | Pending |
+| CARD-05 | Phase 4 | Pending |
+| BALN-01 | Phase 3 | Pending |
+| BALN-02 | Phase 3 | Pending |
+| BALN-03 | Phase 3 | Pending |
+| BALN-04 | Phase 5 | Pending |
+| BALN-05 | Phase 5 | Pending |
+| BALN-06 | Phase 3 | Pending |
+| DASH-01 | Phase 5 | Pending |
+| DASH-02 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Pending |
+| DASH-04 | Phase 5 | Pending |
+| DASH-05 | Phase 5 | Pending |
+| DASH-06 | Phase 5 | Pending |
+| DASH-07 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 43 total
-- Mapped to phases: 0
-- Unmapped: 43 ⚠️
+- Mapped to phases: 43
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after initial definition*
+*Last updated: 2026-04-05 after roadmap creation*
