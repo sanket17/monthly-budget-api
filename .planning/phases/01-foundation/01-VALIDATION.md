@@ -2,8 +2,8 @@
 phase: 1
 slug: foundation
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-30
 ---
 
@@ -38,14 +38,14 @@ created: 2026-04-30
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 1-01-01 | 01 | 1 | AUTH-01 | T-1-01 | POST /api/auth/register/ returns 201 with user data | integration | `pytest users/tests/test_auth.py::TestRegistration::test_register_returns_201_with_user_data -x` | ❌ W0 | ⬜ pending |
-| 1-01-02 | 01 | 1 | AUTH-01 | T-1-01 | Duplicate email returns 400 with generic message | integration | `pytest users/tests/test_auth.py::TestRegistration::test_register_duplicate_email_returns_400 -x` | ❌ W0 | ⬜ pending |
-| 1-01-03 | 01 | 1 | AUTH-02 | T-1-02 | POST /api/auth/login/ returns access + refresh tokens | integration | `pytest users/tests/test_auth.py -k test_login_returns_access_and_refresh_tokens -x` | ❌ W0 | ⬜ pending |
-| 1-01-04 | 01 | 1 | AUTH-03 | T-1-03 | POST /api/auth/token/refresh/ returns new access token | integration | `pytest users/tests/test_auth.py -k test_refresh -x` | ❌ W0 | ⬜ pending |
-| 1-01-05 | 01 | 1 | AUTH-04 | T-1-04 | POST /api/auth/logout/ blacklists token; subsequent refresh returns 401 | integration | `pytest users/tests/test_auth.py -k test_logout_blacklists_refresh_token -x` | ❌ W0 | ⬜ pending |
-| 1-01-06 | 01 | 1 | AUTH-05 | T-1-05 | GET /api/users/me/ returns own profile when authenticated | integration | `pytest users/tests/test_auth.py -k test_profile_returns_own_data -x` | ❌ W0 | ⬜ pending |
-| 1-01-07 | 01 | 1 | AUTH-05 | T-1-05 | GET /api/users/me/ returns 401 when unauthenticated | integration | `pytest users/tests/test_auth.py -k test_profile_requires_authentication -x` | ❌ W0 | ⬜ pending |
-| 1-01-08 | 01 | 1 | Security | T-1-06 | User B cannot access User A's data | integration | `pytest users/tests/test_auth.py -k cross_user -x` | ❌ W0 | ⬜ pending |
+| 1-01-01 | 01 | 1 | AUTH-01 | T-1-01 | POST /api/auth/register/ returns 201 with user data | integration | `pytest users/tests/test_auth.py::TestRegistration::test_register_returns_201_with_user_data -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-02 | 01 | 1 | AUTH-01 | T-1-01 | Duplicate email returns 400 with generic message | integration | `pytest users/tests/test_auth.py::TestRegistration::test_register_duplicate_email_returns_400 -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-03 | 01 | 1 | AUTH-02 | T-1-02 | POST /api/auth/login/ returns access + refresh tokens | integration | `pytest users/tests/test_auth.py -k test_login_returns_access_and_refresh_tokens -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-04 | 01 | 1 | AUTH-03 | T-1-03 | POST /api/auth/token/refresh/ returns new access token | integration | `pytest users/tests/test_auth.py -k test_refresh -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-05 | 01 | 1 | AUTH-04 | T-1-04 | POST /api/auth/logout/ blacklists token; subsequent refresh returns 401 | integration | `pytest users/tests/test_auth.py -k test_logout_blacklists_refresh_token -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-06 | 01 | 1 | AUTH-05 | T-1-05 | GET /api/users/me/ returns own profile when authenticated | integration | `pytest users/tests/test_auth.py -k test_profile_returns_own_data -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-07 | 01 | 1 | AUTH-05 | T-1-05 | GET /api/users/me/ returns 401 when unauthenticated | integration | `pytest users/tests/test_auth.py -k test_profile_requires_authentication -x` | ✅ 01-01-T2 | ⬜ pending |
+| 1-01-08 | 01 | 1 | Security | T-1-06 | User B cannot access User A's data | integration | `pytest users/tests/test_auth.py -k cross_user -x` | ✅ 01-01-T2 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -53,12 +53,12 @@ created: 2026-04-30
 
 ## Wave 0 Requirements
 
-- [ ] `pytest.ini` — Django settings module configuration (`DJANGO_SETTINGS_MODULE`)
-- [ ] `conftest.py` — `api_client` and `authenticated_client` fixtures
-- [ ] `users/tests/__init__.py` — package marker
-- [ ] `users/tests/factories.py` — `UserFactory` via factory_boy
-- [ ] `users/tests/test_auth.py` — stub tests for AUTH-01 through AUTH-05 + cross-user security test
-- [ ] Framework install: `pip install pytest-django factory-boy coverage` in project venv
+- [x] `pytest.ini` — Django settings module configuration (`DJANGO_SETTINGS_MODULE`)
+- [x] `conftest.py` — `api_client` and `authenticated_client` fixtures
+- [x] `users/tests/__init__.py` — package marker
+- [x] `users/tests/factories.py` — `UserFactory` via factory_boy
+- [x] `users/tests/test_auth.py` — stub tests for AUTH-01 through AUTH-05 + cross-user security test
+- [x] Framework install: `pip install pytest-django factory-boy coverage` in project venv
 
 ---
 
@@ -72,11 +72,11 @@ created: 2026-04-30
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-04-30
