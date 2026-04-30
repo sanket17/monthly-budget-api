@@ -31,7 +31,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A user can use a refresh token to obtain a new access token without re-authenticating
   4. A user can log out and the refresh token is blacklisted (subsequent refresh attempts return 401)
   5. An authenticated user can view and update their own profile; unauthenticated requests are rejected
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, split settings, PostgreSQL via Docker, Wave 0 test infrastructure
+- [ ] 01-02-PLAN.md — CustomUser model (email USERNAME_FIELD), migrations, database schema
+- [ ] 01-03-PLAN.md — JWT auth endpoints, serializers, UserScopedMixin, passing tests
 
 ### Phase 2: Budget Structure
 **Goal**: Users can define the category structure of their budget and set planned amounts that carry forward automatically
@@ -99,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/3 | Not started | - |
 | 2. Budget Structure | 0/TBD | Not started | - |
 | 3. Transactions and Balance | 0/TBD | Not started | - |
 | 4. Credit Cards | 0/TBD | Not started | - |
