@@ -31,12 +31,21 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A user can use a refresh token to obtain a new access token without re-authenticating
   4. A user can log out and the refresh token is blacklisted (subsequent refresh attempts return 401)
   5. An authenticated user can view and update their own profile; unauthenticated requests are rejected
-**Plans**: 3 plans
+**Plans**: 3 plans (0/3 complete)
 
-Plans:
+**Wave 1**
 - [ ] 01-01-PLAN.md — Project scaffold, split settings, PostgreSQL via Docker, Wave 0 test infrastructure
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 01-02-PLAN.md — CustomUser model (email USERNAME_FIELD), migrations, database schema
+
+**Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 01-03-PLAN.md — JWT auth endpoints, serializers, UserScopedMixin, passing tests
+
+**Cross-cutting constraints:**
+- `AUTH_USER_MODEL = 'users.CustomUser'` must be set in settings before any `migrate` invocation
+- `rest_framework_simplejwt.token_blacklist` must be in INSTALLED_APPS before first migration
+- URL names are NOT namespaced (use `reverse('register')`, not `reverse('auth:register')`)
 
 ### Phase 2: Budget Structure
 **Goal**: Users can define the category structure of their budget and set planned amounts that carry forward automatically
@@ -104,7 +113,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 0/3 | Planned | - |
 | 2. Budget Structure | 0/TBD | Not started | - |
 | 3. Transactions and Balance | 0/TBD | Not started | - |
 | 4. Credit Cards | 0/TBD | Not started | - |
