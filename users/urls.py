@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.views import (
     TokenBlacklistView,
     TokenObtainPairView,
@@ -7,10 +8,18 @@ from rest_framework_simplejwt.views import (
 
 from .views import ProfileView, RegisterView
 
+
+class ThrottledTokenObtainPairView(TokenObtainPairView):
+    """Login endpoint under the 'auth' throttle scope — same brute-force limit as registration."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth"
+
+
 # Auth endpoints — imported into config/urls.py under /api/auth/
 auth_patterns = [
     path("register/", RegisterView.as_view(), name="register"),
-    path("login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("login/", ThrottledTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
 ]
