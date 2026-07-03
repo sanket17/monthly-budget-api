@@ -1,0 +1,9 @@
+.venv/
+.env
+*.pyc
+__pycache__/
+*.egg-info/
+.coverage
+htmlcov/
+dist/
+.DS_Store
