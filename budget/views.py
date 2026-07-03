@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from users.mixins import UserScopedMixin
 
-from .models import Category
-from .serializers import CategorySerializer
+from .models import Category, PlannedAmount
+from .serializers import CategorySerializer, PlannedAmountSerializer
 from .utils import parse_month_param
 
 
@@ -33,3 +33,21 @@ class CategoryViewSet(UserScopedMixin, viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save(update_fields=["is_active"])
+
+
+class PlannedAmountViewSet(UserScopedMixin, viewsets.ModelViewSet):
+    """
+    /api/planned-amounts/ — set and list planned amounts (BUDG-05..08).
+
+    Append-only (D-08): no PUT/PATCH/DELETE — editing is done by POSTing a
+    new PlannedAmount; PlannedAmountSerializer.create() decides
+    append-vs-update-in-place per D-08's future-dated-row rule. Exposing
+    PUT/PATCH/DELETE here would let a client silently mutate or destroy
+    history, breaking BUDG-08's "changing a planned amount does not alter
+    historical months" guarantee.
+    """
+
+    queryset = PlannedAmount.objects.all()
+    serializer_class = PlannedAmountSerializer
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "post", "head", "options"]
