@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A user can use a refresh token to obtain a new access token without re-authenticating
   4. A user can log out and the refresh token is blacklisted (subsequent refresh attempts return 401)
   5. An authenticated user can view and update their own profile; unauthenticated requests are rejected
-**Plans**: 3 plans (2/3 complete)
+**Plans**: 3 plans (3/3 complete)
 
 **Wave 1**
 - [x] 01-01-PLAN.md — Project scaffold, split settings, PostgreSQL via Docker, Wave 0 test infrastructure
@@ -40,7 +40,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 01-02-PLAN.md — CustomUser model (email USERNAME_FIELD), migrations, database schema
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 01-03-PLAN.md — JWT auth endpoints, serializers, UserScopedMixin, passing tests
+- [x] 01-03-PLAN.md — JWT auth endpoints, serializers, UserScopedMixin, passing tests
 
 **Cross-cutting constraints:**
 - `AUTH_USER_MODEL = 'users.CustomUser'` must be set in settings before any `migrate` invocation
