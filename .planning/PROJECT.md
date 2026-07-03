@@ -13,13 +13,13 @@ Users can see exactly where their money goes each month — planned vs actual �
 ### Validated
 
 - [x] Multi-user registration and authentication (JWT/token-based) — Validated in Phase 1: Foundation
+- [x] Expense tracking with user-defined categories assigned to Needs/Wants/Investment/Other — Validated in Phase 2: Budget Structure
+- [x] Income tracking with user-defined categories — Validated in Phase 2: Budget Structure
+- [x] Planned amounts per category that carry over month to month until changed — Validated in Phase 2: Budget Structure
 
 ### Active
 
-- [ ] Expense tracking with user-defined categories assigned to Needs/Wants/Investment/Other
-- [ ] Income tracking with user-defined categories
 - [ ] Credit card tracking (separate from expenses) with name, planned, and actual amounts
-- [ ] Planned amounts per category that carry over month to month until changed
 - [ ] Actual transaction recording with date, amount, description, category
 - [ ] Recurring monthly entries (expenses and income) that auto-add on a set date each month
 - [ ] Bank balance tracking — manual initial entry, then auto-calculated (prev balance + income - expenses)
@@ -39,7 +39,7 @@ Users can see exactly where their money goes each month — planned vs actual �
 
 ## Current State
 
-Phase 1 (Foundation) complete — Django project scaffolded (split settings, PostgreSQL via Docker), CustomUser model with email login, JWT auth (register/login/refresh/logout), UserScopedMixin security baseline for all future user-owned resources. 9/9 tests passing, 94% coverage. Next: Phase 2 (Budget Structure).
+Phase 2 (Budget Structure) complete — expense categories (Needs/Wants/Investment/Other) and income categories (flat), soft-delete, carry-forward PlannedAmount model (append-only, effective_from-based), IDOR-safe PlannedAmount creation, registration seeds each new user with their real ~49-category starter set. 30/30 tests passing. Next: Phase 3 (Transactions and Balance).
 
 ## Context
 
@@ -63,7 +63,9 @@ Phase 1 (Foundation) complete — Django project scaffolded (split settings, Pos
 | DRF as backend framework | User preference, Python ecosystem | Validated Phase 1 |
 | Credit cards tracked separately from expenses | Reflects user's existing spreadsheet workflow | — Pending |
 | Emergency fund via special expense/income types | Simpler than a separate transaction system, matches user's mental model | — Pending |
-| Planned amounts carry over until changed | Reduces monthly setup friction | — Pending |
+| Planned amounts carry over until changed | Reduces monthly setup friction | Validated Phase 2 |
+| New users seeded with real category taxonomy (not generic defaults) | User provided actual spreadsheet; matches their mental model on day one | Validated Phase 2 |
+| Category soft-delete (is_active flag, never hard-delete) | Preserves historical transaction/planned-amount references | Validated Phase 2 |
 | Multi-user from the start | User wants others to be able to register and use the system | Validated Phase 1 |
 
 ## Evolution
@@ -84,4 +86,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-03 after Phase 1 (Foundation) completion*
+*Last updated: 2026-07-04 after Phase 2 (Budget Structure) completion*
