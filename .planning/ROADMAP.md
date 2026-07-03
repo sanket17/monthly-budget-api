@@ -57,7 +57,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can set a planned amount for any category; the amount is returned when querying that category for that month
   4. A planned amount set in January is automatically returned for February without re-entry
   5. Updating a planned amount in March does not alter what was planned in January or February
-**Plans**: 4 plans (3/4 complete)
+**Plans**: 4 plans (4/4 complete)
 
 **Wave 1**
 - [x] 02-01-PLAN.md — budget app scaffold: Category + PlannedAmount models, migration, admin, seed constants, service functions, test factories
@@ -67,7 +67,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] 02-03-PLAN.md — Registration seeding hook (D-05/D-06): wire seed_default_categories into RegistrationSerializer
 
 **Wave 3** *(blocked on Wave 2 completion — shares budget/serializers.py, budget/views.py, budget/urls.py with Plan 02-02)*
-- [ ] 02-04-PLAN.md — PlannedAmount CRUD: IDOR-safe serializer, append-only viewset, BUDG-05..08 tests + core security test
+- [x] 02-04-PLAN.md — PlannedAmount CRUD: IDOR-safe serializer, append-only viewset, BUDG-05..08 tests + core security test
 
 ### Phase 3: Transactions and Balance
 **Goal**: Users can record all money movement and the system maintains an accurate, auto-calculated bank balance per month

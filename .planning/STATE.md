@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 2 of 6 (Budget Structure)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-07-04 — Plans 02-02 + 02-03 executed in parallel (Category CRUD, registration seeding). Full suite 23/23 passing.
+Plan: 4 of 4 in current phase
+Status: Verifying
+Last activity: 2026-07-04 — Plan 02-04 executed: PlannedAmount CRUD, IDOR-safe validate_category(), D-08 logic. Full suite 30/30 passing.
 
-Progress: [███████░░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
