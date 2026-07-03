@@ -40,6 +40,12 @@ Users can create, edit, and delete expense categories (grouped under Needs/Wants
 
 **Note for planner/researcher:** "Emergency Fund" (expense) and "Redeemed Emergency" (income) are ordinary seeded category names in this phase — no special behavior yet. Phase 5 (BALN-04, BALN-05) later gives these categories special balance-affecting semantics (adding an "Emergency Fund" expense increases the emergency fund balance; "Redeem Emergency Fund" income decreases it). Do not build that logic now — just seed the category names so Phase 5 has something to key off of. Confirm with user in Phase 5 discussion whether the Phase 5 special-category matching should key off these exact seeded names.
 
+### Category uniqueness (flagged by RESEARCH.md, resolved post-research)
+- **D-07:** Duplicate active category names are rejected — DB-level `UniqueConstraint` on `(user, name, category_type)` scoped to active (non-soft-deleted) categories. Soft-deleted categories don't block reuse of the name.
+
+### Future-dated planned amount edits (flagged by RESEARCH.md, resolved post-research)
+- **D-08:** If the most recent `PlannedAmount` row for a category has `effective_from` still in the future (hasn't taken effect for any queried month yet), editing the planned amount again before that date updates that same row in place rather than appending a new row. A new row is only appended when the previous most-recent row has already taken effect (its `effective_from` is in the past or current month).
+
 ### Claude's Discretion
 None — all decisions above were explicitly confirmed by the user.
 
