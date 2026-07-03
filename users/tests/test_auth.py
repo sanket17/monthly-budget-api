@@ -1,8 +1,7 @@
 """
 Auth endpoint tests — AUTH-01 through AUTH-05 + cross-user security.
 
-Tests are marked xfail here (Wave 0 stubs). They become passing tests
-after Plan 01-03 implements the auth endpoints.
+Implemented and passing as of Plan 01-03 (endpoints wired in users/urls.py).
 
 Verification map (from 01-VALIDATION.md):
   AUTH-01: test_register_returns_201_with_user_data
@@ -25,7 +24,6 @@ from users.tests.factories import UserFactory
 class TestRegistration:
     """AUTH-01: User can register with email and password."""
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_register_returns_201_with_user_data(self, api_client):
         url = reverse("register")
         payload = {"email": "new@example.com", "password": "securepass123"}
@@ -34,7 +32,6 @@ class TestRegistration:
         assert response.data["email"] == "new@example.com"
         assert "password" not in response.data
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_register_duplicate_email_returns_400_with_generic_message(
         self, api_client
     ):
@@ -53,7 +50,6 @@ class TestRegistration:
 class TestLogin:
     """AUTH-02: User can log in and receive JWT access and refresh tokens."""
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_login_returns_access_and_refresh_tokens(self, api_client):
         UserFactory(email="login@example.com")
         payload = {"email": "login@example.com", "password": "testpass123"}
@@ -67,7 +63,6 @@ class TestLogin:
 class TestTokenRefresh:
     """AUTH-03: User can refresh an expired access token using a refresh token."""
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_refresh_returns_new_access_token(self, api_client):
         user = UserFactory()
         login_resp = api_client.post(
@@ -84,7 +79,6 @@ class TestTokenRefresh:
 class TestLogout:
     """AUTH-04: User can log out and the refresh token is blacklisted."""
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_logout_blacklists_refresh_token(self, api_client):
         user = UserFactory()
         login_resp = api_client.post(
@@ -111,12 +105,10 @@ class TestLogout:
 class TestProfile:
     """AUTH-05: User can view and update their own profile; unauthenticated requests rejected."""
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_profile_requires_authentication(self, api_client):
         response = api_client.get(reverse("profile"))
         assert response.status_code == 401
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_profile_returns_own_data(self, api_client):
         user = UserFactory()
         api_client.force_authenticate(user=user)
@@ -124,7 +116,6 @@ class TestProfile:
         assert response.status_code == 200
         assert response.data["email"] == user.email
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_profile_patch_updates_name(self, api_client):
         user = UserFactory()
         api_client.force_authenticate(user=user)
@@ -137,7 +128,6 @@ class TestProfile:
 class TestCrossUserIsolation:
     """Security: UserScopedMixin — User B cannot access User A's data."""
 
-    @pytest.mark.xfail(reason="Endpoint not yet implemented — Plan 01-03")
     def test_cross_user_cannot_access_other_profile(self, api_client):
         user_a = UserFactory()
         user_b = UserFactory()
