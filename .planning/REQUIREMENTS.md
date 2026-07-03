@@ -17,14 +17,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Budget Structure
 
-- [ ] **BUDG-01**: User can create expense categories with a name and group type (Needs/Wants/Investment/Other)
-- [ ] **BUDG-02**: User can edit and delete their expense categories
-- [ ] **BUDG-03**: User can create income categories with a name
-- [ ] **BUDG-04**: User can edit and delete their income categories
-- [ ] **BUDG-05**: User can set a planned amount for any expense category
-- [ ] **BUDG-06**: User can set a planned amount for any income category
-- [ ] **BUDG-07**: Planned amounts carry over month to month until the user changes them
-- [ ] **BUDG-08**: Changing a planned amount does not alter historical months' planned values
+- [x] **BUDG-01**: User can create expense categories with a name and group type (Needs/Wants/Investment/Other)
+- [x] **BUDG-02**: User can edit and delete their expense categories
+- [x] **BUDG-03**: User can create income categories with a name
+- [x] **BUDG-04**: User can edit and delete their income categories
+- [x] **BUDG-05**: User can set a planned amount for any expense category
+- [x] **BUDG-06**: User can set a planned amount for any income category
+- [x] **BUDG-07**: Planned amounts carry over month to month until the user changes them
+- [x] **BUDG-08**: Changing a planned amount does not alter historical months' planned values
 
 ### Transactions
 
@@ -111,14 +111,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
-| BUDG-01 | Phase 2 | Pending |
-| BUDG-02 | Phase 2 | Pending |
-| BUDG-03 | Phase 2 | Pending |
-| BUDG-04 | Phase 2 | Pending |
-| BUDG-05 | Phase 2 | Pending |
-| BUDG-06 | Phase 2 | Pending |
-| BUDG-07 | Phase 2 | Pending |
-| BUDG-08 | Phase 2 | Pending |
+| BUDG-01 | Phase 2 | Complete |
+| BUDG-02 | Phase 2 | Complete |
+| BUDG-03 | Phase 2 | Complete |
+| BUDG-04 | Phase 2 | Complete |
+| BUDG-05 | Phase 2 | Complete |
+| BUDG-06 | Phase 2 | Complete |
+| BUDG-07 | Phase 2 | Complete |
+| BUDG-08 | Phase 2 | Complete |
 | TXNS-01 | Phase 3 | Pending |
 | TXNS-02 | Phase 3 | Pending |
 | TXNS-03 | Phase 3 | Pending |
