@@ -38,19 +38,19 @@ created: 2026-07-04
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 02-01 | 01 | TBD | BUDG-01 | V4 | UserScopedMixin scoping | integration | `pytest budget/tests/test_categories.py::TestExpenseCategory::test_create_expense_category -x` | ❌ W0 | ⬜ pending |
-| 02-01 | 01 | TBD | BUDG-02 | V4 | Soft delete, not cascade | integration | `pytest budget/tests/test_categories.py::TestExpenseCategory::test_soft_delete -x` | ❌ W0 | ⬜ pending |
-| 02-01 | 01 | TBD | BUDG-03 | V4 | No group field on income | integration | `pytest budget/tests/test_categories.py::TestIncomeCategory::test_create_income_category -x` | ❌ W0 | ⬜ pending |
-| 02-01 | 01 | TBD | BUDG-04 | V4 | Soft delete, not cascade | integration | `pytest budget/tests/test_categories.py::TestIncomeCategory::test_soft_delete -x` | ❌ W0 | ⬜ pending |
-| 02-02 | 02 | TBD | BUDG-05 | V4/V5 | IDOR-safe category FK validation | integration | `pytest budget/tests/test_planned_amounts.py::TestPlannedAmount::test_set_expense_planned_amount -x` | ❌ W0 | ⬜ pending |
-| 02-02 | 02 | TBD | BUDG-06 | V4/V5 | IDOR-safe category FK validation | integration | `pytest budget/tests/test_planned_amounts.py::TestPlannedAmount::test_set_income_planned_amount -x` | ❌ W0 | ⬜ pending |
-| 02-02 | 02 | TBD | BUDG-07 | — | Carry-forward query correctness | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_carries_forward_to_next_month -x` | ❌ W0 | ⬜ pending |
-| 02-02 | 02 | TBD | BUDG-08 | — | Append-only history, no mutation | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_new_row_does_not_mutate_past_months -x` | ❌ W0 | ⬜ pending |
-| 02-03 | 03 | TBD | D-05/D-06 | Mass assignment | Seed not API-reachable | integration | `pytest budget/tests/test_seeding.py::TestSeeding::test_registration_seeds_categories -x` | ❌ W0 | ⬜ pending |
-| 02-02 | 02 | TBD | Security | V4 (IDOR) | Cross-user category_id rejected | integration | `pytest budget/tests/test_planned_amounts.py::TestSecurity::test_cannot_set_planned_amount_for_other_users_category -x` | ❌ W0 | ⬜ pending |
+| 02-02 | 02 | 2 | BUDG-01 | V4 | UserScopedMixin scoping | integration | `pytest budget/tests/test_categories.py::TestExpenseCategory::test_create_expense_category -x` | ❌ W0 | ⬜ pending |
+| 02-02 | 02 | 2 | BUDG-02 | V4 | Soft delete, not cascade | integration | `pytest budget/tests/test_categories.py::TestExpenseCategory::test_soft_delete -x` | ❌ W0 | ⬜ pending |
+| 02-02 | 02 | 2 | BUDG-03 | V4 | No group field on income | integration | `pytest budget/tests/test_categories.py::TestIncomeCategory::test_create_income_category -x` | ❌ W0 | ⬜ pending |
+| 02-02 | 02 | 2 | BUDG-04 | V4 | Soft delete, not cascade | integration | `pytest budget/tests/test_categories.py::TestIncomeCategory::test_soft_delete -x` | ❌ W0 | ⬜ pending |
+| 02-04 | 04 | 3 | BUDG-05 | V4/V5 | IDOR-safe category FK validation | integration | `pytest budget/tests/test_planned_amounts.py::TestPlannedAmount::test_set_expense_planned_amount -x` | ❌ W0 | ⬜ pending |
+| 02-04 | 04 | 3 | BUDG-06 | V4/V5 | IDOR-safe category FK validation | integration | `pytest budget/tests/test_planned_amounts.py::TestPlannedAmount::test_set_income_planned_amount -x` | ❌ W0 | ⬜ pending |
+| 02-04 | 04 | 3 | BUDG-07 | — | Carry-forward query correctness | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_carries_forward_to_next_month -x` | ❌ W0 | ⬜ pending |
+| 02-04 | 04 | 3 | BUDG-08 | — | Append-only history, no mutation | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_new_row_does_not_mutate_past_months -x` | ❌ W0 | ⬜ pending |
+| 02-03 | 03 | 2 | D-05/D-06 | Mass assignment | Seed not API-reachable | integration | `pytest budget/tests/test_seeding.py::TestSeeding::test_registration_seeds_categories -x` | ❌ W0 | ⬜ pending |
+| 02-04 | 04 | 3 | Security | V4 (IDOR) | Cross-user category_id rejected | integration | `pytest budget/tests/test_planned_amounts.py::TestSecurity::test_cannot_set_planned_amount_for_other_users_category -x` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-*Wave numbers TBD — assigned by planner; update this table after PLAN.md files are created.*
+*Wave numbers assigned: Wave 1 = 02-01 (scaffold), Wave 2 = 02-02 + 02-03 (parallel, no file overlap), Wave 3 = 02-04 (depends on 02-01 and 02-02 via shared budget/serializers.py, budget/views.py, budget/urls.py).*
 
 ---
 
