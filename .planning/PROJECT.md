@@ -12,11 +12,10 @@ Users can see exactly where their money goes each month — planned vs actual �
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Multi-user registration and authentication (JWT/token-based) — Validated in Phase 1: Foundation
 
 ### Active
 
-- [ ] Multi-user registration and authentication (JWT/token-based)
 - [ ] Expense tracking with user-defined categories assigned to Needs/Wants/Investment/Other
 - [ ] Income tracking with user-defined categories
 - [ ] Credit card tracking (separate from expenses) with name, planned, and actual amounts
@@ -38,6 +37,10 @@ Users can see exactly where their money goes each month — planned vs actual �
 - Shared budgets between users — each user has their own independent budget
 - Export to spreadsheet/PDF — not in v1
 
+## Current State
+
+Phase 1 (Foundation) complete — Django project scaffolded (split settings, PostgreSQL via Docker), CustomUser model with email login, JWT auth (register/login/refresh/logout), UserScopedMixin security baseline for all future user-owned resources. 9/9 tests passing, 94% coverage. Next: Phase 2 (Budget Structure).
+
 ## Context
 
 - The user currently manages their budget in a detailed spreadsheet with sections for expenses (grouped by Needs/Wants/Investment/Other), income, and credit cards, each with planned and actual columns
@@ -57,11 +60,11 @@ Users can see exactly where their money goes each month — planned vs actual �
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| DRF as backend framework | User preference, Python ecosystem | — Pending |
+| DRF as backend framework | User preference, Python ecosystem | Validated Phase 1 |
 | Credit cards tracked separately from expenses | Reflects user's existing spreadsheet workflow | — Pending |
 | Emergency fund via special expense/income types | Simpler than a separate transaction system, matches user's mental model | — Pending |
 | Planned amounts carry over until changed | Reduces monthly setup friction | — Pending |
-| Multi-user from the start | User wants others to be able to register and use the system | — Pending |
+| Multi-user from the start | User wants others to be able to register and use the system | Validated Phase 1 |
 
 ## Evolution
 
@@ -81,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-05 after initialization*
+*Last updated: 2026-07-03 after Phase 1 (Foundation) completion*
