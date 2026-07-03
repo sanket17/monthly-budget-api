@@ -12,7 +12,7 @@ Six phases that build a multi-user personal budget management API from the groun
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Django project scaffolding, custom user model, JWT authentication, and the UserScopedMixin security baseline
+- [x] **Phase 1: Foundation** - Django project scaffolding, custom user model, JWT authentication, and the UserScopedMixin security baseline (Complete 2026-07-03)
 - [ ] **Phase 2: Budget Structure** - Expense and income category CRUD with Needs/Wants/Investment/Other grouping, and carry-over planned amounts
 - [ ] **Phase 3: Transactions and Balance** - Expense and income transaction CRUD, month-scoped filtering, historical browsing, and automatic bank balance tracking
 - [ ] **Phase 4: Credit Cards** - Standalone credit card tracking with per-card planned vs actual comparison
@@ -113,7 +113,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In progress | - |
+| 1. Foundation | 3/3 | Complete | 2026-07-03 |
 | 2. Budget Structure | 0/TBD | Not started | - |
 | 3. Transactions and Balance | 0/TBD | Not started | - |
 | 4. Credit Cards | 0/TBD | Not started | - |

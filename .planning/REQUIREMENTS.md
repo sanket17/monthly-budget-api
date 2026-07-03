@@ -9,11 +9,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can register with email and password
-- [ ] **AUTH-02**: User can log in and receive JWT access and refresh tokens
-- [ ] **AUTH-03**: User can refresh an expired access token using a refresh token
-- [ ] **AUTH-04**: User can log out (blacklist refresh token)
-- [ ] **AUTH-05**: User can view and update their profile
+- [x] **AUTH-01**: User can register with email and password
+- [x] **AUTH-02**: User can log in and receive JWT access and refresh tokens
+- [x] **AUTH-03**: User can refresh an expired access token using a refresh token
+- [x] **AUTH-04**: User can log out (blacklist refresh token)
+- [x] **AUTH-05**: User can view and update their profile
 
 ### Budget Structure
 
@@ -106,11 +106,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
+| AUTH-05 | Phase 1 | Complete |
 | BUDG-01 | Phase 2 | Pending |
 | BUDG-02 | Phase 2 | Pending |
 | BUDG-03 | Phase 2 | Pending |
