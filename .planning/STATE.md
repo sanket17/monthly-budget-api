@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-05)
 ## Current Position
 
 Phase: 2 of 6 (Budget Structure)
-Plan: 0 of 4 in current phase
-Status: Ready to execute
-Last activity: 2026-07-04 — Phase 2 planned: 4 plans across 3 waves, verified by plan-checker (0 blockers, 6 warnings — W1/W2/W3 fixed, W4-W6 accepted as info-level)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-07-04 — Plan 02-01 executed: budget app scaffold, Category+PlannedAmount models, migration applied, seed constants, factories
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 25%
 
 ## Performance Metrics
 

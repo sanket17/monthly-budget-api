@@ -57,10 +57,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can set a planned amount for any category; the amount is returned when querying that category for that month
   4. A planned amount set in January is automatically returned for February without re-entry
   5. Updating a planned amount in March does not alter what was planned in January or February
-**Plans**: 4 plans (0/4 complete)
+**Plans**: 4 plans (1/4 complete)
 
 **Wave 1**
-- [ ] 02-01-PLAN.md — budget app scaffold: Category + PlannedAmount models, migration, admin, seed constants, service functions, test factories
+- [x] 02-01-PLAN.md — budget app scaffold: Category + PlannedAmount models, migration, admin, seed constants, service functions, test factories
 
 **Wave 2** *(blocked on Wave 1 completion, parallel with each other)*
 - [ ] 02-02-PLAN.md — Category CRUD: serializer, viewset, URL wiring, BUDG-01..04 tests
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-07-03 |
-| 2. Budget Structure | 0/4 | Planned | - |
+| 2. Budget Structure | 1/4 | In progress | - |
 | 3. Transactions and Balance | 0/TBD | Not started | - |
 | 4. Credit Cards | 0/TBD | Not started | - |
 | 5. Dashboard and Emergency Fund | 0/TBD | Not started | - |
