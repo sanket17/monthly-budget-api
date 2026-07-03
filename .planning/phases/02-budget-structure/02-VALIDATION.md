@@ -46,6 +46,7 @@ created: 2026-07-04
 | 02-04 | 04 | 3 | BUDG-06 | V4/V5 | IDOR-safe category FK validation | integration | `pytest budget/tests/test_planned_amounts.py::TestPlannedAmount::test_set_income_planned_amount -x` | ❌ W0 | ⬜ pending |
 | 02-04 | 04 | 3 | BUDG-07 | — | Carry-forward query correctness | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_carries_forward_to_next_month -x` | ❌ W0 | ⬜ pending |
 | 02-04 | 04 | 3 | BUDG-08 | — | Append-only history, no mutation | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_new_row_does_not_mutate_past_months -x` | ❌ W0 | ⬜ pending |
+| 02-04 | 04 | 3 | D-08 (edge case) | — | Two distinct future-month edits collapse per D-08's literal rule (plan-checker W2) | integration | `pytest budget/tests/test_planned_amounts.py::TestCarryForward::test_two_different_future_months_collapse_into_one_row -x` | ❌ W0 | ⬜ pending |
 | 02-03 | 03 | 2 | D-05/D-06 | Mass assignment | Seed not API-reachable | integration | `pytest budget/tests/test_seeding.py::TestSeeding::test_registration_seeds_categories -x` | ❌ W0 | ⬜ pending |
 | 02-04 | 04 | 3 | Security | V4 (IDOR) | Cross-user category_id rejected | integration | `pytest budget/tests/test_planned_amounts.py::TestSecurity::test_cannot_set_planned_amount_for_other_users_category -x` | ❌ W0 | ⬜ pending |
 
