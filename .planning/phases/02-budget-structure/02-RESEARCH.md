@@ -434,17 +434,19 @@ Note: this is a **cross-app import** (`users/serializers.py` importing from `bud
 
 **If this table is empty:** N/A — see rows above; all are genuine open design choices not addressed in CONTEXT.md's locked decisions, not compliance/security-critical assumptions.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should duplicate category names (same user, same type) be rejected or allowed?**
    - What we know: CONTEXT.md's seed list has no duplicate names within a group/type, and D-01/D-02/D-03/D-04 don't address user-created duplicates.
    - What's unclear: Whether a `UniqueConstraint` should exist at all, or whether users may legitimately want two categories named identically (e.g., in different groups it's a non-issue since group isn't part of the seed uniqueness signal, but same-group duplicates are the ambiguous case).
    - Recommendation: Default to enforcing uniqueness (A1) since it's the safer, more common expectation for a personal budgeting tool — but flag as a one-line confirmation question in `/gsd-discuss-phase` follow-up or note in the plan for user sign-off.
+   - **RESOLVED: see D-07** — user confirmed uniqueness is enforced via `UniqueConstraint(fields=["user","category_type","name"], condition=Q(is_active=True))`, matching recommendation A1.
 
 2. **Does re-setting a future month's planned amount append or replace?**
    - What we know: D-08 guarantees past months are immutable. D-03 explicitly allows setting future `effective_from`.
    - What's unclear: If a user sets March's amount in January, then changes their mind again in February (still before March), does that create a 3rd row or update the 2nd (not-yet-effective) row?
    - Recommendation: Treat as append-only always (A2), for implementation simplicity and consistency with "never mutate" — but confirm this matches user's mental model before planning the exact serializer create/update behavior for `PlannedAmountViewSet`.
+   - **RESOLVED: see D-08** — user confirmed the opposite of this recommendation (A2): a not-yet-effective future row is updated in place, not appended. Plan 02-04 implements this and adds `test_two_different_future_months_collapse_into_one_row` to make the multi-future-month consequence explicit (plan-checker W2).
 
 ## Environment Availability
 
