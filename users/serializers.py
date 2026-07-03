@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from rest_framework import serializers
+
+from budget.services import seed_default_categories
 
 User = get_user_model()
 
@@ -40,12 +43,15 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        return User.objects.create_user(
-            email=validated_data["email"],
-            password=validated_data["password"],
-            first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
-        )
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=validated_data["email"],
+                password=validated_data["password"],
+                first_name=validated_data.get("first_name", ""),
+                last_name=validated_data.get("last_name", ""),
+            )
+            seed_default_categories(user)
+        return user
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
