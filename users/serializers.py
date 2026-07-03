@@ -17,6 +17,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         min_length=8,
         style={"input_type": "password"},
     )
+    # ModelSerializer auto-generates a UniqueValidator for this field (email is
+    # unique=True on the model) whose default message reveals "already exists" —
+    # a user-enumeration leak. validators=[] disables the auto-validator so our
+    # validate_email() below (generic message) is the only uniqueness check.
+    email = serializers.EmailField(validators=[])
 
     class Meta:
         model = User
