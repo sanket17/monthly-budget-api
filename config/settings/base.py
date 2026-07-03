@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # Project apps — users app created in Plan 01-02
     "users",
+    # Project apps — budget app created in Phase 2
+    "budget",
 ]
 
 MIDDLEWARE = [
