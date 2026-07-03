@@ -39,5 +39,8 @@ def _clear_throttle_cache():
 Alternatively, override `DEFAULT_THROTTLE_RATES` in test settings to a much higher rate,
 or override `DEFAULT_THROTTLE_CLASSES = []` in a pytest-specific settings module.
 
-**Status:** Deferred — not fixed by Plan 02-02. Flagging for orchestrator to route to
-Plan 02-03 or a follow-up task before Phase 2 is considered fully verified end-to-end.
+**Status:** RESOLVED by Plan 02-03. An autouse `clear_throttle_cache` fixture (calling
+`cache.clear()` before and after every test) was added to root `conftest.py` in Plan
+02-03's Task 2 commit (`1732feb`) — matching the suggested fix above. Full repo suite
+(23/23, Plan 02-01 + 02-02 + 02-03 combined) verified green after the fix. See
+`02-03-SUMMARY.md` Deviations section for details.
