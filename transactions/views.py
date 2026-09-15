@@ -2,6 +2,8 @@ import calendar
 
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from budget.utils import parse_month_param
 from users.mixins import UserScopedMixin
@@ -9,6 +11,7 @@ from users.mixins import UserScopedMixin
 from .models import InitialBalance, Transaction
 from .pagination import TransactionPagination
 from .serializers import InitialBalanceSerializer, TransactionSerializer
+from .services import get_bank_balance, get_emergency_fund_balance
 
 
 class TransactionViewSet(UserScopedMixin, viewsets.ModelViewSet):
@@ -46,3 +49,26 @@ class InitialBalanceViewSet(UserScopedMixin, viewsets.ModelViewSet):
     serializer_class = InitialBalanceSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "head", "options"]
+
+
+class BalanceSummaryView(APIView):
+    """
+    GET /api/balance/?month=YYYY-MM — opening/closing bank balance and
+    emergency-fund balance for the given month (BALN-02, BALN-06).
+    Defaults to the current month if ?month= is omitted, same convention
+    as TransactionViewSet.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        month_start = parse_month_param(request)
+        return Response(
+            {
+                "month": month_start,
+                "bank_balance": get_bank_balance(request.user.id, month_start),
+                "emergency_fund_balance": get_emergency_fund_balance(
+                    request.user.id, month_start
+                ),
+            }
+        )
