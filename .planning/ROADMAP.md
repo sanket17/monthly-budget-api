@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Django project scaffolding, custom user model, JWT authentication, and the UserScopedMixin security baseline (Complete 2026-07-03)
 - [x] **Phase 2: Budget Structure** - Expense and income category CRUD with Needs/Wants/Investment/Other grouping, and carry-over planned amounts (Complete 2026-07-04)
 - [x] **Phase 3: Transactions and Balance** - Expense and income transaction CRUD, month-scoped filtering, historical browsing, and automatic bank balance tracking (Complete 2026-09-16)
-- [ ] **Phase 4: Credit Cards** - Standalone credit card tracking with per-card planned vs actual comparison
+- [x] **Phase 4: Credit Cards** - Standalone credit card tracking with per-card planned vs actual comparison (Complete 2026-09-16)
 - [ ] **Phase 5: Dashboard and Emergency Fund** - Unified dashboard API aggregating savings %, category breakdowns, planned vs actual, and emergency fund auto-tracking
 - [ ] **Phase 6: Recurring Entries** - Monthly recurring expense and income generation with idempotent auto-creation
 
@@ -92,7 +92,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. User can create, edit, and delete credit cards with a name and planned monthly expenditure
   2. User can add, edit, and delete expense entries on a credit card with date, amount, and description
   3. User can query any credit card for any month and see the planned amount alongside the sum of actual entries
-**Plans**: TBD
+**Plans**: 1 plan, 3 tasks (3/3 complete)
+
+- [x] 04-01-PLAN.md — Task 1: CreditCard model + CRUD API, soft-delete (CARD-01, CARD-02); Task 2: CreditCardEntry model + CRUD API (CARD-03, CARD-04); Task 3: get_actual_amount service + planned-vs-actual wired into CreditCardSerializer (CARD-05)
 
 ### Phase 5: Dashboard and Emergency Fund
 **Goal**: Users can see a complete at-a-glance summary of any month's budget health, including savings rate, category breakdowns, and emergency fund balance
@@ -128,6 +130,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Foundation | 3/3 | Complete | 2026-07-03 |
 | 2. Budget Structure | 4/4 | Complete | 2026-07-04 |
 | 3. Transactions and Balance | 1/1 | Complete | 2026-09-16 |
-| 4. Credit Cards | 0/TBD | Not started | - |
+| 4. Credit Cards | 1/1 | Complete | 2026-09-16 |
 | 5. Dashboard and Emergency Fund | 0/TBD | Not started | - |
 | 6. Recurring Entries | 0/TBD | Not started | - |
