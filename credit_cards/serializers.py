@@ -1,20 +1,33 @@
+from datetime import date
 from decimal import Decimal
 
 from rest_framework import serializers
 
 from .models import CreditCard, CreditCardEntry
+from .services import get_actual_amount
 
 
 class CreditCardSerializer(serializers.ModelSerializer):
     """
-    Serializer for CreditCard CRUD (CARD-01/02). planned_amount is a plain
-    writable field — no carry-forward history (see CreditCard docstring).
+    Serializer for CreditCard CRUD (CARD-01/02) plus planned-vs-actual
+    (CARD-05). actual_amount is read-only and computed for
+    self.context["month"] (injected by CreditCardViewSet.get_serializer_context)
+    via credit_cards.services.get_actual_amount — same pattern as
+    budget/serializers.py CategorySerializer.get_planned_amount.
+    planned_amount itself is a plain writable field — no carry-forward
+    history (see CreditCard docstring).
     """
+
+    actual_amount = serializers.SerializerMethodField()
 
     class Meta:
         model = CreditCard
-        fields = ("id", "name", "planned_amount", "is_active")
+        fields = ("id", "name", "planned_amount", "is_active", "actual_amount")
         read_only_fields = ("id", "is_active")  # mass-assignment defense
+
+    def get_actual_amount(self, obj):
+        month = self.context.get("month", date.today().replace(day=1))
+        return get_actual_amount(obj.id, month)
 
     def validate_name(self, value):
         """
