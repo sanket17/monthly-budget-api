@@ -2,6 +2,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from budget.urls import budget_patterns
+from transactions.urls import transaction_patterns
 from users.urls import auth_patterns, user_patterns
 
 urlpatterns = [
@@ -15,6 +16,8 @@ urlpatterns = [
     path("api/auth/", include(auth_patterns)),
     # User endpoints: /api/users/me/
     path("api/users/", include(user_patterns)),
-    # Budget endpoints: /api/categories/ (router already prefixes categories/)
+    # Budget endpoints: /api/categories/, /api/planned-amounts/
     path("api/", include(budget_patterns)),
+    # Transaction endpoints: /api/transactions/ (router already prefixes transactions/)
+    path("api/", include(transaction_patterns)),
 ]
