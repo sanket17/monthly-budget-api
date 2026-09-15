@@ -1,6 +1,8 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
-from .models import CreditCard
+from .models import CreditCard, CreditCardEntry
 
 
 class CreditCardSerializer(serializers.ModelSerializer):
@@ -30,4 +32,35 @@ class CreditCardSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "You already have an active credit card with this name."
             )
+        return value
+
+
+class CreditCardEntrySerializer(serializers.ModelSerializer):
+    """
+    Serializer for CreditCardEntry CRUD (CARD-03/04).
+
+    validate_card is the IDOR/BOLA defense against a user attaching an
+    entry to another user's card via a crafted card id — UserScopedMixin
+    only scopes the CreditCardEntry object itself, never FK targets
+    supplied on create/update (same pattern as
+    transactions/serializers.py TransactionSerializer.validate_category).
+    The default queryset for `card` (CreditCard.objects, the active-only
+    manager) already excludes soft-deleted cards, so a deleted card's id
+    is rejected as "does not exist" before validate_card even runs.
+    """
+
+    class Meta:
+        model = CreditCardEntry
+        fields = ("id", "card", "amount", "date", "description", "created_at")
+        read_only_fields = ("id", "created_at")
+
+    def validate_card(self, value):
+        request = self.context["request"]
+        if value.user_id != request.user.id:
+            raise serializers.ValidationError("Invalid card.")
+        return value
+
+    def validate_amount(self, value):
+        if value <= Decimal("0.00"):
+            raise serializers.ValidationError("Amount must be greater than zero.")
         return value

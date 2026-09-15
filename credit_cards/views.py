@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from users.mixins import UserScopedMixin
 
-from .models import CreditCard
-from .serializers import CreditCardSerializer
+from .models import CreditCard, CreditCardEntry
+from .serializers import CreditCardEntrySerializer, CreditCardSerializer
 
 
 class CreditCardViewSet(UserScopedMixin, viewsets.ModelViewSet):
@@ -24,3 +24,15 @@ class CreditCardViewSet(UserScopedMixin, viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save(update_fields=["is_active"])
+
+
+class CreditCardEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
+    """
+    /api/credit-card-entries/ — CRUD for credit card expense entries
+    (CARD-03/04). Hard delete — no history requirement, same as
+    transactions/views.py TransactionViewSet.
+    """
+
+    queryset = CreditCardEntry.objects.all()
+    serializer_class = CreditCardEntrySerializer
+    permission_classes = [IsAuthenticated]
