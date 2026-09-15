@@ -28,13 +28,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Transactions
 
-- [ ] **TXNS-01**: User can add an expense with date, amount, description, and category
-- [ ] **TXNS-02**: User can edit and delete their own expenses
-- [ ] **TXNS-03**: User can add income with date, amount, description, and category
-- [ ] **TXNS-04**: User can edit and delete their own income entries
-- [ ] **TXNS-05**: User can filter transactions by month and year
-- [ ] **TXNS-06**: User can browse historical months' transactions
-- [ ] **TXNS-07**: Transaction lists are paginated
+- [x] **TXNS-01**: User can add an expense with date, amount, description, and category
+- [x] **TXNS-02**: User can edit and delete their own expenses
+- [x] **TXNS-03**: User can add income with date, amount, description, and category
+- [x] **TXNS-04**: User can edit and delete their own income entries
+- [x] **TXNS-05**: User can filter transactions by month and year
+- [x] **TXNS-06**: User can browse historical months' transactions
+- [x] **TXNS-07**: Transaction lists are paginated
 
 ### Recurring Entries
 
@@ -54,12 +54,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Balance Tracking
 
-- [ ] **BALN-01**: User can manually set their initial bank balance
-- [ ] **BALN-02**: Bank balance auto-calculates each month (previous balance + income - expenses)
-- [ ] **BALN-03**: User can manually set their initial emergency fund balance
+- [x] **BALN-01**: User can manually set their initial bank balance
+- [x] **BALN-02**: Bank balance auto-calculates each month (previous balance + income - expenses)
+- [x] **BALN-03**: User can manually set their initial emergency fund balance
 - [ ] **BALN-04**: Emergency fund balance auto-increases when user adds an "Emergency Fund" expense
 - [ ] **BALN-05**: Emergency fund balance auto-decreases when user adds a "Redeem Emergency Fund" income
-- [ ] **BALN-06**: User can view bank balance and emergency fund balance at start and end of any month
+- [x] **BALN-06**: User can view bank balance and emergency fund balance at start and end of any month
 
 ### Dashboard
 
@@ -119,13 +119,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BUDG-06 | Phase 2 | Complete |
 | BUDG-07 | Phase 2 | Complete |
 | BUDG-08 | Phase 2 | Complete |
-| TXNS-01 | Phase 3 | Pending |
-| TXNS-02 | Phase 3 | Pending |
-| TXNS-03 | Phase 3 | Pending |
-| TXNS-04 | Phase 3 | Pending |
-| TXNS-05 | Phase 3 | Pending |
-| TXNS-06 | Phase 3 | Pending |
-| TXNS-07 | Phase 3 | Pending |
+| TXNS-01 | Phase 3 | Complete |
+| TXNS-02 | Phase 3 | Complete |
+| TXNS-03 | Phase 3 | Complete |
+| TXNS-04 | Phase 3 | Complete |
+| TXNS-05 | Phase 3 | Complete |
+| TXNS-06 | Phase 3 | Complete |
+| TXNS-07 | Phase 3 | Complete |
 | RECR-01 | Phase 6 | Pending |
 | RECR-02 | Phase 6 | Pending |
 | RECR-03 | Phase 6 | Pending |
@@ -136,12 +136,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CARD-03 | Phase 4 | Pending |
 | CARD-04 | Phase 4 | Pending |
 | CARD-05 | Phase 4 | Pending |
-| BALN-01 | Phase 3 | Pending |
-| BALN-02 | Phase 3 | Pending |
-| BALN-03 | Phase 3 | Pending |
+| BALN-01 | Phase 3 | Complete |
+| BALN-02 | Phase 3 | Complete |
+| BALN-03 | Phase 3 | Complete |
 | BALN-04 | Phase 5 | Pending |
 | BALN-05 | Phase 5 | Pending |
-| BALN-06 | Phase 3 | Pending |
+| BALN-06 | Phase 3 | Complete |
 | DASH-01 | Phase 5 | Pending |
 | DASH-02 | Phase 5 | Pending |
 | DASH-03 | Phase 5 | Pending |
@@ -157,4 +157,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-04-05 after roadmap creation*
+*Last updated: 2026-09-16 after Phase 3 (Transactions and Balance) completion*
