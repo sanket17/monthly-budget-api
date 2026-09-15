@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from .models import Transaction
+from .models import InitialBalance, Transaction
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -31,3 +31,28 @@ class TransactionSerializer(serializers.ModelSerializer):
         if value <= Decimal("0.00"):
             raise serializers.ValidationError("Amount must be greater than zero.")
         return value
+
+
+class InitialBalanceSerializer(serializers.ModelSerializer):
+    """
+    Serializer for setting a user's bank or emergency-fund initial balance
+    (BALN-01/03). One row per (user, balance_type) — see InitialBalance
+    docstring. create() upserts via update_or_create instead of relying on
+    the DB UniqueConstraint to raise IntegrityError on a second POST.
+    """
+
+    class Meta:
+        model = InitialBalance
+        fields = ("id", "balance_type", "amount", "effective_month", "created_at")
+        read_only_fields = ("id", "created_at")
+
+    def create(self, validated_data):
+        obj, _ = InitialBalance.objects.update_or_create(
+            user=validated_data["user"],
+            balance_type=validated_data["balance_type"],
+            defaults={
+                "amount": validated_data["amount"],
+                "effective_month": validated_data["effective_month"],
+            },
+        )
+        return obj
