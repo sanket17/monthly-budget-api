@@ -21,10 +21,10 @@ Users can see exactly where their money goes each month — planned vs actual �
 - [x] Calendar month cycle (1st to last day) — Validated in Phase 3: Transactions and Balance
 - [x] Bank balance tracking — manual initial entry, then auto-calculated (prev balance + income - expenses) — Validated in Phase 3: Transactions and Balance
 - [x] Emergency fund initial balance (manual entry, viewable per month) — Validated in Phase 3: Transactions and Balance; auto-adjustment via "Emergency Fund"/"Redeem Emergency Fund" transaction types is still Active (Phase 5)
+- [x] Credit card tracking (separate from expenses) with name, planned, and actual amounts — Validated in Phase 4: Credit Cards
 
 ### Active
 
-- [ ] Credit card tracking (separate from expenses) with name, planned, and actual amounts
 - [ ] Recurring monthly entries (expenses and income) that auto-add on a set date each month
 - [ ] Emergency fund auto-adjustment — increases via "Emergency Fund" expense type, decreases via "Redeem Emergency Fund" income type
 - [ ] Dashboard data API: savings %, breakdown by Needs/Wants/Investment/Other (% and amount), planned vs actual for income/expenses/credit cards, bank balance and emergency fund at start and end of month
@@ -40,7 +40,7 @@ Users can see exactly where their money goes each month — planned vs actual �
 
 ## Current State
 
-Phase 3 (Transactions and Balance) complete — Transaction model (reuses Category's expense/income discriminator, no redundant type field), IDOR-safe CRUD API with calendar-month filtering (defaults to current month) and pagination, InitialBalance discriminator model (bank/emergency_fund) with upsert-on-repost semantics, and a balance summary service that computes bank balance on read by walking forward from the anchor month through Transaction sums. Emergency fund auto-adjustment (BALN-04/05) intentionally deferred to Phase 5 — the fund holds steady at its initial amount until then. 54/54 tests passing. Next: Phase 4 (Credit Cards).
+Phase 4 (Credit Cards) complete — CreditCard model (soft-delete via is_active, same pattern as Category; static planned_amount field, no carry-forward history) and CreditCardEntry model (hard-delete, no category field — entries belong to a card, kept fully independent of the expense/income category system), both IDOR-safe. CARD-05 planned-vs-actual served by an actual_amount SerializerMethodField on CreditCardSerializer, computed per request via a month-scoped Sum aggregation service, same pattern as budget's planned_amount field. 73/73 tests passing. Next: Phase 5 (Dashboard and Emergency Fund).
 
 ## Context
 
@@ -62,7 +62,7 @@ Phase 3 (Transactions and Balance) complete — Transaction model (reuses Catego
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | DRF as backend framework | User preference, Python ecosystem | Validated Phase 1 |
-| Credit cards tracked separately from expenses | Reflects user's existing spreadsheet workflow | — Pending |
+| Credit cards tracked separately from expenses | Reflects user's existing spreadsheet workflow | Validated Phase 4 |
 | Emergency fund via special expense/income types | Simpler than a separate transaction system, matches user's mental model | — Pending |
 | Planned amounts carry over until changed | Reduces monthly setup friction | Validated Phase 2 |
 | New users seeded with real category taxonomy (not generic defaults) | User provided actual spreadsheet; matches their mental model on day one | Validated Phase 2 |
@@ -70,6 +70,9 @@ Phase 3 (Transactions and Balance) complete — Transaction model (reuses Catego
 | Transaction has no separate type field — reuses Category.category_type | Avoids a redundant discriminator; a transaction's type is whatever type its category is | Validated Phase 3 |
 | Bank balance computed on read, never stored per month | Stays correct if past transactions are edited/deleted after the fact — no stale cached monthly snapshots to invalidate | Validated Phase 3 |
 | InitialBalance is one discriminator model (bank/emergency_fund), not two | Follows the same discriminator pattern as Category; one row per (user, balance_type), upserted on re-POST | Validated Phase 3 |
+| CreditCard.planned_amount is a static field, not carry-forward history like PlannedAmount | CARD-02 says "edit" (not "carries over"/"history" the way BUDG-07/08 explicitly do); confirmed with user rather than assumed | Validated Phase 4 |
+| CreditCard soft-delete (is_active flag, never hard-delete) | Preserves historical CreditCardEntry references, same pattern as Category; confirmed with user rather than assumed | Validated Phase 4 |
+| CreditCardEntry has no category field — separate from Transaction | Keeps credit cards fully independent of the expense/income category system, per the "tracked separately" decision above | Validated Phase 4 |
 | Multi-user from the start | User wants others to be able to register and use the system | Validated Phase 1 |
 
 ## Evolution
@@ -90,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-16 after Phase 3 (Transactions and Balance) completion*
+*Last updated: 2026-09-16 after Phase 4 (Credit Cards) completion*

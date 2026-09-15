@@ -46,11 +46,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Credit Cards
 
-- [ ] **CARD-01**: User can add a credit card with name and planned monthly expenditure
-- [ ] **CARD-02**: User can edit and delete their credit cards
-- [ ] **CARD-03**: User can add expense entries to a credit card with date, amount, and description
-- [ ] **CARD-04**: User can edit and delete credit card expense entries
-- [ ] **CARD-05**: User can view planned vs actual spending per credit card for any month
+- [x] **CARD-01**: User can add a credit card with name and planned monthly expenditure
+- [x] **CARD-02**: User can edit and delete their credit cards
+- [x] **CARD-03**: User can add expense entries to a credit card with date, amount, and description
+- [x] **CARD-04**: User can edit and delete credit card expense entries
+- [x] **CARD-05**: User can view planned vs actual spending per credit card for any month
 
 ### Balance Tracking
 
@@ -131,11 +131,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RECR-03 | Phase 6 | Pending |
 | RECR-04 | Phase 6 | Pending |
 | RECR-05 | Phase 6 | Pending |
-| CARD-01 | Phase 4 | Pending |
-| CARD-02 | Phase 4 | Pending |
-| CARD-03 | Phase 4 | Pending |
-| CARD-04 | Phase 4 | Pending |
-| CARD-05 | Phase 4 | Pending |
+| CARD-01 | Phase 4 | Complete |
+| CARD-02 | Phase 4 | Complete |
+| CARD-03 | Phase 4 | Complete |
+| CARD-04 | Phase 4 | Complete |
+| CARD-05 | Phase 4 | Complete |
 | BALN-01 | Phase 3 | Complete |
 | BALN-02 | Phase 3 | Complete |
 | BALN-03 | Phase 3 | Complete |
@@ -157,4 +157,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-05*
-*Last updated: 2026-09-16 after Phase 3 (Transactions and Balance) completion*
+*Last updated: 2026-09-16 after Phase 4 (Credit Cards) completion*
