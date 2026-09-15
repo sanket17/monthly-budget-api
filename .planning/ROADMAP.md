@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Django project scaffolding, custom user model, JWT authentication, and the UserScopedMixin security baseline (Complete 2026-07-03)
 - [x] **Phase 2: Budget Structure** - Expense and income category CRUD with Needs/Wants/Investment/Other grouping, and carry-over planned amounts (Complete 2026-07-04)
-- [ ] **Phase 3: Transactions and Balance** - Expense and income transaction CRUD, month-scoped filtering, historical browsing, and automatic bank balance tracking
+- [x] **Phase 3: Transactions and Balance** - Expense and income transaction CRUD, month-scoped filtering, historical browsing, and automatic bank balance tracking (Complete 2026-09-16)
 - [ ] **Phase 4: Credit Cards** - Standalone credit card tracking with per-card planned vs actual comparison
 - [ ] **Phase 5: Dashboard and Emergency Fund** - Unified dashboard API aggregating savings %, category breakdowns, planned vs actual, and emergency fund auto-tracking
 - [ ] **Phase 6: Recurring Entries** - Monthly recurring expense and income generation with idempotent auto-creation
@@ -80,7 +80,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can query any historical month and see that month's transactions
   5. User can set an initial bank balance; the system auto-calculates each subsequent month's closing balance as previous closing + income - expenses
   6. User can view opening and closing bank balance for any month
-**Plans**: TBD
+**Plans**: 1 plan, 3 tasks (3/3 complete)
+
+- [x] 03-01-PLAN.md — Task 1: Transaction model + CRUD API, month filtering, historical browsing, pagination (TXNS-01..07); Task 2: InitialBalance model + set-initial API (BALN-01, BALN-03); Task 3: bank/emergency-fund balance calculation service + summary endpoint (BALN-02, BALN-06)
 
 ### Phase 4: Credit Cards
 **Goal**: Users can track credit card spending independently from regular expenses, with planned vs actual comparison per card
@@ -125,7 +127,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-07-03 |
 | 2. Budget Structure | 4/4 | Complete | 2026-07-04 |
-| 3. Transactions and Balance | 0/TBD | Not started | - |
+| 3. Transactions and Balance | 1/1 | Complete | 2026-09-16 |
 | 4. Credit Cards | 0/TBD | Not started | - |
 | 5. Dashboard and Emergency Fund | 0/TBD | Not started | - |
 | 6. Recurring Entries | 0/TBD | Not started | - |
