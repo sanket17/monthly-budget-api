@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CreditCard
+from .models import CreditCard, CreditCardEntry
 
 
 @admin.register(CreditCard)
@@ -13,3 +13,10 @@ class CreditCardAdmin(admin.ModelAdmin):
         # CreditCard.objects (ActiveCreditCardManager) hides soft-deleted
         # rows — admin needs to see everything for management purposes.
         return CreditCard.all_objects.all()
+
+
+@admin.register(CreditCardEntry)
+class CreditCardEntryAdmin(admin.ModelAdmin):
+    list_display = ("description", "user", "card", "amount", "date")
+    list_filter = ("date",)
+    search_fields = ("description", "user__email", "card__name")
