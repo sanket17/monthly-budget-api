@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     "users",
     # Project apps — budget app created in Phase 2
     "budget",
+    # Project apps — transactions app created in Phase 3
+    "transactions",
 ]
 
 MIDDLEWARE = [
