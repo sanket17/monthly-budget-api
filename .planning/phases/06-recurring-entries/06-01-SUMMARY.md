@@ -203,3 +203,14 @@ None — no external service configuration required. `tzdata==2026.4` was added 
 ---
 *Phase: 06-recurring-entries*
 *Completed: 2026-09-28*
+
+## Self-Check: PASSED
+
+- FOUND: recurring/models.py
+- FOUND: recurring/services.py
+- FOUND: users/validators.py
+- FOUND: .planning/phases/06-recurring-entries/06-01-SUMMARY.md
+- FOUND: de0680e (Task 1 commit)
+- FOUND: 49e43b7 (Task 2 RED commit)
+- FOUND: 2d91396 (Task 2 GREEN commit)
+- FOUND: 194f857 (plan metadata commit)
