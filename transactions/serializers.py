@@ -18,8 +18,16 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transaction
-        fields = ("id", "category", "amount", "date", "description", "created_at")
-        read_only_fields = ("id", "created_at")
+        fields = (
+            "id",
+            "category",
+            "amount",
+            "date",
+            "description",
+            "recurring_entry",
+            "created_at",
+        )
+        read_only_fields = ("id", "recurring_entry", "created_at")
 
     def validate_category(self, value):
         request = self.context["request"]

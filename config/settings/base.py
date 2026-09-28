@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "credit_cards",
     # Project apps — dashboard app created in Phase 5
     "dashboard",
+    # Project apps — recurring app created in Phase 6
+    "recurring",
 ]
 
 MIDDLEWARE = [

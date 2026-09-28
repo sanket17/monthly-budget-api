@@ -4,6 +4,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from budget.urls import budget_patterns
 from credit_cards.urls import credit_card_patterns
 from dashboard.urls import dashboard_patterns
+from recurring.urls import recurring_patterns
 from transactions.urls import transaction_patterns
 from users.urls import auth_patterns, user_patterns
 
@@ -26,4 +27,6 @@ urlpatterns = [
     path("api/", include(credit_card_patterns)),
     # Dashboard endpoints: /api/dashboard/
     path("api/", include(dashboard_patterns)),
+    # Recurring entry endpoints: /api/recurring-entries/
+    path("api/", include(recurring_patterns)),
 ]
