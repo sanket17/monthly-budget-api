@@ -20,6 +20,13 @@ class Transaction(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateField()
     description = models.CharField(max_length=255)
+    recurring_entry = models.ForeignKey(
+        "recurring.RecurringEntry",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_transactions",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
