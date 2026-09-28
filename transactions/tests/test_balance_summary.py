@@ -92,6 +92,30 @@ class TestGetEmergencyFundBalance:
         result = get_emergency_fund_balance(user.id, date(2026, 6, 1))
         assert result == {"opening": Decimal("5000.00"), "closing": Decimal("5000.00")}
 
+    def test_ef_expense_adds_and_redeem_income_subtracts(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="emergency_fund",
+            amount="5000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        ef_expense_category = CategoryFactory(
+            user=user, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        redeem_income_category = CategoryFactory(
+            user=user, category_type="income", group=None, name="Redeem Emergency Fund"
+        )
+        TransactionFactory(
+            user=user, category=ef_expense_category, amount="200.00", date=date(2026, 1, 10)
+        )
+        TransactionFactory(
+            user=user, category=redeem_income_category, amount="500.00", date=date(2026, 1, 15)
+        )
+        result = get_emergency_fund_balance(user.id, date(2026, 1, 1))
+        assert result["opening"] == Decimal("5000.00")
+        assert result["closing"] == Decimal("4700.00")  # 5000 + 200 - 500
+
 
 @pytest.mark.django_db
 class TestBalanceSummaryEndpoint:
