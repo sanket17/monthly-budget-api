@@ -67,22 +67,74 @@ def get_dashboard(user_id: int, month_start: date) -> dict:
     # historical PlannedAmount rows must still count toward its
     # category_type's total (D-08's active-only exclusion is stated
     # explicitly ONLY for credit cards, never for categories).
-    category_types_by_id = dict(
-        Category.all_objects.filter(user_id=user_id).values_list("id", "category_type")
-    )
+    #
+    # DASH-02: this lookup also carries "group" so it can be reused below
+    # for the expense_breakdown split, rather than adding a second, separate
+    # query for the same rows.
+    category_lookup = {
+        row["id"]: (row["category_type"], row["group"])
+        for row in Category.all_objects.filter(user_id=user_id).values(
+            "id", "category_type", "group"
+        )
+    }
     planned_amounts_by_category = get_effective_amounts_for_user(user_id, month_start)
     expense_planned_total = Decimal("0.00")
     income_planned_total = Decimal("0.00")
+    planned_by_group: dict[str, Decimal] = {}
     for category_id, amount in planned_amounts_by_category.items():
-        category_type = category_types_by_id.get(category_id)
+        category_type, group = category_lookup.get(category_id, (None, None))
         if category_type == "expense":
             expense_planned_total += amount
+            if group:
+                planned_by_group[group] = (
+                    planned_by_group.get(group, Decimal("0.00")) + amount
+                )
         elif category_type == "income":
             income_planned_total += amount
 
     # DASH-05: credit-card totals scoped to active cards only (D-08),
     # reusing cc_expense_total computed above for the "actual" side.
     cc_planned_total = get_total_planned_amount(user_id)
+
+    # DASH-02/D-09: actual-per-group via direct category__group FK
+    # traversal — correct regardless of the referenced category's current
+    # is_active status, since the group value doesn't disappear when a
+    # category is soft-deleted (a historical transaction still counts).
+    actual_by_group_rows = (
+        Transaction.objects.filter(
+            user_id=user_id,
+            category__category_type="expense",
+            date__gte=month_start,
+            date__lte=month_end,
+        )
+        .values("category__group")
+        .annotate(actual=Sum("amount"))
+    )
+    actual_by_group = {
+        row["category__group"]: row["actual"] for row in actual_by_group_rows
+    }
+
+    expense_breakdown = []
+    for group in Category.Group.values:
+        actual = actual_by_group.get(group, Decimal("0.00"))
+        planned = planned_by_group.get(group, Decimal("0.00"))
+        expense_breakdown.append(
+            {
+                "group": group,
+                "actual": actual,
+                "planned": planned,
+                "percent_of_actual": (
+                    (actual / expense_total)
+                    if expense_total > Decimal("0.00")
+                    else None
+                ),
+                "percent_of_planned": (
+                    (planned / expense_planned_total)
+                    if expense_planned_total > Decimal("0.00")
+                    else None
+                ),
+            }
+        )
 
     return {
         "month": month_start,
@@ -94,6 +146,7 @@ def get_dashboard(user_id: int, month_start: date) -> dict:
             "percentage": savings_percentage,
             "amount": savings_amount,
         },
+        "expense_breakdown": expense_breakdown,
         "expense_totals": {"planned": expense_planned_total, "actual": expense_total},
         "income_totals": {"planned": income_planned_total, "actual": income_total},
         "credit_card_totals": {"planned": cc_planned_total, "actual": cc_expense_total},
