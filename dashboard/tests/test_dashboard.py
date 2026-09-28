@@ -9,7 +9,7 @@ from decimal import Decimal
 import pytest
 from django.urls import reverse
 
-from budget.tests.factories import CategoryFactory
+from budget.tests.factories import CategoryFactory, PlannedAmountFactory
 from credit_cards.tests.factories import CreditCardEntryFactory, CreditCardFactory
 from dashboard.services import get_dashboard
 from transactions.tests.factories import InitialBalanceFactory, TransactionFactory
@@ -87,3 +87,56 @@ class TestGetDashboardSavings:
         assert result["bank_balance"] == {"opening": None, "closing": None}
         assert result["savings"]["percentage"] is None
         assert result["savings"]["amount"] is None
+
+
+@pytest.mark.django_db
+class TestGetDashboardTotals:
+    def test_expense_and_income_totals_include_planned_and_actual(self, user_factory):
+        user = user_factory()
+        expense_category = CategoryFactory(user=user, category_type="expense", group="needs")
+        income_category = CategoryFactory(user=user, category_type="income", group=None)
+        PlannedAmountFactory(
+            user=user,
+            category=expense_category,
+            amount="300.00",
+            effective_from=date(2026, 1, 1),
+        )
+        PlannedAmountFactory(
+            user=user,
+            category=income_category,
+            amount="1000.00",
+            effective_from=date(2026, 1, 1),
+        )
+        TransactionFactory(
+            user=user, category=expense_category, amount="250.00", date=date(2026, 1, 10)
+        )
+        TransactionFactory(
+            user=user, category=income_category, amount="900.00", date=date(2026, 1, 12)
+        )
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        assert result["expense_totals"] == {"planned": Decimal("300.00"), "actual": Decimal("250.00")}
+        assert result["income_totals"] == {"planned": Decimal("1000.00"), "actual": Decimal("900.00")}
+
+    def test_credit_card_totals_exclude_inactive_card(self, user_factory):
+        user = user_factory()
+        active_card = CreditCardFactory(user=user, is_active=True, planned_amount="500.00")
+        inactive_card = CreditCardFactory(user=user, is_active=False, planned_amount="999.00")
+        CreditCardEntryFactory(
+            user=user, card=active_card, amount="150.00", date=date(2026, 1, 5)
+        )
+        CreditCardEntryFactory(
+            user=user, card=inactive_card, amount="999.00", date=date(2026, 1, 6)
+        )
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        assert result["credit_card_totals"] == {"planned": Decimal("500.00"), "actual": Decimal("150.00")}
+
+    def test_soft_deleted_expense_category_still_contributes_actual(self, user_factory):
+        user = user_factory()
+        expense_category = CategoryFactory(user=user, category_type="expense", group="needs")
+        TransactionFactory(
+            user=user, category=expense_category, amount="75.00", date=date(2026, 1, 8)
+        )
+        expense_category.is_active = False
+        expense_category.save()
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        assert result["expense_totals"]["actual"] == Decimal("75.00")
