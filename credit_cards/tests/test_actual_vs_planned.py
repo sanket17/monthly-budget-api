@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from django.urls import reverse
 
-from credit_cards.services import get_actual_amount
+from credit_cards.services import get_actual_amount, get_total_actual_amount
 from credit_cards.tests.factories import CreditCardEntryFactory, CreditCardFactory
 
 
@@ -41,6 +41,15 @@ class TestGetActualAmount:
             card=other_card, user=other_card.user, amount="999.00", date=date(2026, 3, 5)
         )
         result = get_actual_amount(card.id, date(2026, 3, 1))
+        assert result == Decimal("100.00")
+
+
+@pytest.mark.django_db
+class TestGetTotalActualAmount:
+    def test_sums_single_active_card_single_entry(self):
+        card = CreditCardFactory()
+        CreditCardEntryFactory(card=card, user=card.user, amount="100.00", date=date(2026, 3, 5))
+        result = get_total_actual_amount(card.user.id, date(2026, 3, 1))
         assert result == Decimal("100.00")
 
 
