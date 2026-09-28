@@ -38,10 +38,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Recurring Entries
 
-- [ ] **RECR-01**: User can create a recurring monthly expense with category, amount, description, and day of month
-- [ ] **RECR-02**: User can create a recurring monthly income with category, amount, description, and day of month
-- [ ] **RECR-03**: Recurring entries auto-generate transactions on their set day each month
-- [ ] **RECR-04**: Recurring entry generation is idempotent (no duplicates on retry)
+- [x] **RECR-01**: User can create a recurring monthly expense with category, amount, description, and day of month
+- [x] **RECR-02**: User can create a recurring monthly income with category, amount, description, and day of month
+- [x] **RECR-03**: Recurring entries auto-generate transactions on their set day each month
+- [x] **RECR-04**: Recurring entry generation is idempotent (no duplicates on retry)
 - [ ] **RECR-05**: User can edit and delete recurring entries
 
 ### Credit Cards
@@ -126,10 +126,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TXNS-05 | Phase 3 | Complete |
 | TXNS-06 | Phase 3 | Complete |
 | TXNS-07 | Phase 3 | Complete |
-| RECR-01 | Phase 6 | Pending |
-| RECR-02 | Phase 6 | Pending |
-| RECR-03 | Phase 6 | Pending |
-| RECR-04 | Phase 6 | Pending |
+| RECR-01 | Phase 6 | Complete |
+| RECR-02 | Phase 6 | Complete |
+| RECR-03 | Phase 6 | Complete |
+| RECR-04 | Phase 6 | Complete |
 | RECR-05 | Phase 6 | Pending |
 | CARD-01 | Phase 4 | Complete |
 | CARD-02 | Phase 4 | Complete |
