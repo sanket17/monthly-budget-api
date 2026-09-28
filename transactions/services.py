@@ -79,7 +79,10 @@ def _monthly_emergency_fund_totals(
             user_id=user_id, date__gte=start_month, date__lte=range_end
         )
         .filter(
-            Q(category__category_type="expense", category__name__iexact=EMERGENCY_FUND_EXPENSE_NAME)
+            Q(
+                category__category_type="expense",
+                category__name__iexact=EMERGENCY_FUND_EXPENSE_NAME,
+            )
             | Q(
                 category__category_type="income",
                 category__name__iexact=REDEEM_EMERGENCY_FUND_INCOME_NAME,
@@ -135,7 +138,9 @@ def get_bank_balance(user_id: int, month_start: date) -> dict[str, Decimal | Non
     return {"opening": opening, "closing": closing}
 
 
-def get_emergency_fund_balance(user_id: int, month_start: date) -> dict[str, Decimal | None]:
+def get_emergency_fund_balance(
+    user_id: int, month_start: date
+) -> dict[str, Decimal | None]:
     """
     BALN-04/05/06: walk-forward from the emergency_fund InitialBalance
     anchor, one calendar month at a time, mirroring get_bank_balance's

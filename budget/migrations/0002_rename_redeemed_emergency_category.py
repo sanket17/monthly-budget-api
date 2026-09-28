@@ -19,6 +19,16 @@
 # constraint and abort the whole migration for every other user
 # (RESEARCH.md Pitfall 4). A collision is caught per-row and logged
 # instead of raised.
+#
+# Irreversible by design (RunPython.noop reverse): Task 2 of this same
+# phase changes budget/constants.py so every NEW registration is
+# seeded directly with NEW_NAME. Once any new user has registered,
+# a reverse that matches on name__iexact=NEW_NAME can no longer tell
+# "a row this migration renamed" apart from "a row seeded fresh with
+# the new name" — reversing would silently corrupt that unrelated
+# user's data. There is no row-level provenance to disambiguate them,
+# so the reverse is a no-op rather than a plausible-looking but unsafe
+# guess.
 
 from django.db import migrations, transaction
 from django.db.utils import IntegrityError
@@ -47,26 +57,6 @@ def rename_forward(apps, schema_editor):
             )
 
 
-def rename_reverse(apps, schema_editor):
-    Category = apps.get_model("budget", "Category")
-    db_alias = schema_editor.connection.alias
-    queryset = Category.objects.using(db_alias).filter(
-        category_type="income", name__iexact=NEW_NAME
-    )
-    for category in queryset:
-        try:
-            with transaction.atomic(using=db_alias):
-                category.name = OLD_NAME
-                category.save(using=db_alias, update_fields=["name"])
-        except IntegrityError:
-            print(
-                f"WARNING: skipped reverting Category id={category.id} "
-                f"user_id={category.user_id} name={category.name!r} to "
-                f"{OLD_NAME!r} — active category with that name already "
-                f"exists for this user (collision)."
-            )
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -74,5 +64,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(rename_forward, rename_reverse),
+        migrations.RunPython(rename_forward, migrations.RunPython.noop),
     ]
