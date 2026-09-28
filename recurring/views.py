@@ -3,11 +3,14 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from transactions.serializers import TransactionSerializer
 from users.mixins import UserScopedMixin
 
 from .models import RecurringEntry
 from .serializers import RecurringEntrySerializer
+from .services import generate_for_user, today_for_user
 
 
 class RecurringEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
@@ -54,3 +57,31 @@ class RecurringEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
         instance.is_active = True
         instance.save(update_fields=["is_active"])
         return Response(self.get_serializer(instance).data)
+
+
+class GenerateRecurringEntriesView(APIView):
+    """
+    POST /api/recurring-entries/generate/ — on-demand generation for all of
+    the caller's active recurring entries, current month only (D-22..26).
+
+    Deliberately sets no throttle_classes/throttle_scope override (D-25) —
+    inherits the project's default user throttle (1000/day) rather than the
+    5/min `auth` scope used on register/login: the operation is idempotent
+    and strictly user-scoped, so there is no credential-stuffing-style
+    abuse vector to bound more tightly.
+
+    T-06-05 (BOLA): this is a plain APIView, not a ModelViewSet, so
+    UserScopedMixin does not attach automatically. Scoping is structural
+    instead — request.data and request.query_params are never read here at
+    all (D-23), so there is no entry-id/user-id/month parameter to
+    validate or reject in the first place. Every input flows from
+    request.user alone into generate_for_user(request.user, ...), which
+    only ever touches user.recurring_entries.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        current_month = today_for_user(request.user).replace(day=1)
+        created = generate_for_user(request.user, upto_month=current_month)
+        return Response(TransactionSerializer(created, many=True).data)
