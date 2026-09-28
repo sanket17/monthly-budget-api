@@ -2,10 +2,13 @@
 Tests for budget/migrations/0002_rename_redeemed_emergency_category.py (D-02).
 
 No migration-test helper package is installed this phase — rename_forward
-and rename_reverse are called directly, passing the real django.apps.apps
-registry (they only call apps.get_model, same signature Django itself
-uses at migration time) and a minimal stand-in for schema_editor exposing
-only `.connection` (the functions only read schema_editor.connection.alias).
+is called directly, passing the real django.apps.apps registry (it only
+calls apps.get_model, same signature Django itself uses at migration time)
+and a minimal stand-in for schema_editor exposing only `.connection` (the
+function only reads schema_editor.connection.alias).
+
+The migration's reverse is RunPython.noop (irreversible by design — see
+the migration file's module docstring) so there is nothing to test there.
 """
 
 import importlib
@@ -24,7 +27,6 @@ _rename_migration = importlib.import_module(
     "budget.migrations.0002_rename_redeemed_emergency_category"
 )
 rename_forward = _rename_migration.rename_forward
-rename_reverse = _rename_migration.rename_reverse
 
 
 class _FakeSchemaEditor:
@@ -36,7 +38,7 @@ class _FakeSchemaEditor:
 
 @pytest.mark.django_db
 class TestRedeemedEmergencyRenameMigration:
-    def test_renames_income_category_forward_and_reverse(self):
+    def test_renames_income_category_forward(self):
         category = CategoryFactory(
             category_type=Category.CategoryType.INCOME,
             group=None,
@@ -46,10 +48,6 @@ class TestRedeemedEmergencyRenameMigration:
         rename_forward(django_apps, _FakeSchemaEditor)
         category.refresh_from_db()
         assert category.name == "Redeem Emergency Fund"
-
-        rename_reverse(django_apps, _FakeSchemaEditor)
-        category.refresh_from_db()
-        assert category.name == "Redeemed Emergency"
 
     def test_renames_case_insensitively(self):
         category = CategoryFactory(
