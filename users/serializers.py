@@ -4,6 +4,8 @@ from rest_framework import serializers
 
 from budget.services import seed_default_categories
 
+from .validators import validate_iana_timezone
+
 User = get_user_model()
 
 
@@ -28,8 +30,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("id", "email", "password", "first_name", "last_name")
+        fields = ("id", "email", "password", "first_name", "last_name", "timezone")
         read_only_fields = ("id",)
+
+    def validate_timezone(self, value):
+        return validate_iana_timezone(value)
 
     def validate_email(self, value):
         """
@@ -49,6 +54,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
                 password=validated_data["password"],
                 first_name=validated_data.get("first_name", ""),
                 last_name=validated_data.get("last_name", ""),
+                timezone=validated_data.get("timezone", "UTC"),
             )
             seed_default_categories(user)
         return user
@@ -58,9 +64,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for viewing and updating user profile.
     Email and id are read-only — cannot be changed via PATCH.
+    timezone is editable (D-06) via the existing PATCH /api/users/me/.
     """
 
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name")
+        fields = ("id", "email", "first_name", "last_name", "timezone")
         read_only_fields = ("id", "email")
+
+    def validate_timezone(self, value):
+        return validate_iana_timezone(value)

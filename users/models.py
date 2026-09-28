@@ -19,6 +19,7 @@ class CustomUser(AbstractUser):
     """
 
     email = models.EmailField(unique=True)
+    timezone = models.CharField(max_length=64, default="UTC")
 
     # email is the login identifier
     USERNAME_FIELD = "email"
