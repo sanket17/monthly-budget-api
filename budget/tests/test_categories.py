@@ -14,6 +14,7 @@ from django.urls import reverse
 
 from budget.models import Category
 from budget.tests.factories import CategoryFactory
+from recurring.tests.factories import RecurringEntryFactory
 from users.tests.factories import UserFactory
 
 
@@ -57,6 +58,29 @@ class TestExpenseCategory:
         # Soft-deleted category no longer appears in the list endpoint
         list_response = client.get(reverse("category-list"))
         assert category.id not in [c["id"] for c in list_response.data]
+
+    def test_delete_blocked_by_active_recurring_entry(self, authenticated_client):
+        """D-15: a category referenced by an active RecurringEntry cannot
+        be soft-deleted — the delete is rejected and the category's
+        is_active state is left completely unchanged."""
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        RecurringEntryFactory(user=user, category=category)
+        response = client.delete(reverse("category-detail", args=[category.id]))
+        assert response.status_code == 400
+        category.refresh_from_db()
+        assert category.is_active is True
+
+    def test_delete_allowed_when_recurring_entry_is_inactive(self, authenticated_client):
+        """D-15: a soft-deleted (is_active=False) RecurringEntry does not
+        block the category delete — only an active one does."""
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        RecurringEntryFactory(user=user, category=category, is_active=False)
+        response = client.delete(reverse("category-detail", args=[category.id]))
+        assert response.status_code == 204
+        category.refresh_from_db()
+        assert category.is_active is False
 
 
 @pytest.mark.django_db
