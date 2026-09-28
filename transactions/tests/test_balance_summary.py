@@ -116,6 +116,137 @@ class TestGetEmergencyFundBalance:
         assert result["opening"] == Decimal("5000.00")
         assert result["closing"] == Decimal("4700.00")  # 5000 + 200 - 500
 
+    def test_auto_calculates_forward_across_months(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="emergency_fund",
+            amount="5000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        ef_expense_category = CategoryFactory(
+            user=user, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        redeem_income_category = CategoryFactory(
+            user=user, category_type="income", group=None, name="Redeem Emergency Fund"
+        )
+        TransactionFactory(
+            user=user, category=ef_expense_category, amount="200.00", date=date(2026, 1, 10)
+        )
+        TransactionFactory(
+            user=user, category=redeem_income_category, amount="300.00", date=date(2026, 2, 5)
+        )
+        # January: 5000 -> 5200 (closing, +200 EF expense).
+        # February: opening 5200, -300 redemption -> 4900.
+        result = get_emergency_fund_balance(user.id, date(2026, 2, 1))
+        assert result["opening"] == Decimal("5200.00")
+        assert result["closing"] == Decimal("4900.00")
+
+    def test_case_insensitive_category_name_match(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="emergency_fund",
+            amount="5000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        lowercase_ef_category = CategoryFactory(
+            user=user, category_type="expense", group="needs", name="emergency fund"
+        )
+        TransactionFactory(
+            user=user, category=lowercase_ef_category, amount="150.00", date=date(2026, 1, 10)
+        )
+        result = get_emergency_fund_balance(user.id, date(2026, 1, 1))
+        assert result["opening"] == Decimal("5000.00")
+        assert result["closing"] == Decimal("5150.00")  # 5000 + 150
+
+    def test_multiple_active_categories_with_same_name_both_count(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="emergency_fund",
+            amount="5000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        # Simulates one "Emergency Fund" category soft-deleted, then recreated
+        # under the same name (D-03) — both are ACTIVE categories, and D-03
+        # requires transactions under BOTH to count toward the total.
+        first_ef_category = CategoryFactory(
+            user=user, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        first_ef_category.is_active = False
+        first_ef_category.save()
+        second_ef_category = CategoryFactory(
+            user=user, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        TransactionFactory(
+            user=user, category=first_ef_category, amount="100.00", date=date(2026, 1, 5)
+        )
+        TransactionFactory(
+            user=user, category=second_ef_category, amount="50.00", date=date(2026, 1, 10)
+        )
+        result = get_emergency_fund_balance(user.id, date(2026, 1, 1))
+        assert result["opening"] == Decimal("5000.00")
+        assert result["closing"] == Decimal("5150.00")  # 5000 + 100 + 50
+
+    def test_soft_deleted_category_holds_flat_after_last_transaction(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="emergency_fund",
+            amount="5000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        ef_category = CategoryFactory(
+            user=user, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        # Past transaction still counts toward its month's total even after
+        # the category is later soft-deleted (D-05) — the FK isn't filtered
+        # on is_active.
+        TransactionFactory(
+            user=user, category=ef_category, amount="200.00", date=date(2026, 1, 10)
+        )
+        ef_category.is_active = False
+        ef_category.save()
+        # No new transactions can be filed against a soft-deleted category,
+        # so the balance holds flat at its last computed value in every
+        # subsequent month.
+        result = get_emergency_fund_balance(user.id, date(2026, 3, 1))
+        assert result["opening"] == Decimal("5200.00")
+        assert result["closing"] == Decimal("5200.00")
+
+    def test_cross_user_isolation(self, user_factory):
+        user_a = user_factory()
+        user_b = user_factory()
+        InitialBalanceFactory(
+            user=user_a,
+            balance_type="emergency_fund",
+            amount="5000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        InitialBalanceFactory(
+            user=user_b,
+            balance_type="emergency_fund",
+            amount="1000.00",
+            effective_month=date(2026, 1, 1),
+        )
+        ef_category_a = CategoryFactory(
+            user=user_a, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        ef_category_b = CategoryFactory(
+            user=user_b, category_type="expense", group="needs", name="Emergency Fund"
+        )
+        TransactionFactory(
+            user=user_a, category=ef_category_a, amount="200.00", date=date(2026, 1, 10)
+        )
+        TransactionFactory(
+            user=user_b, category=ef_category_b, amount="75.00", date=date(2026, 1, 12)
+        )
+        result_a = get_emergency_fund_balance(user_a.id, date(2026, 1, 1))
+        result_b = get_emergency_fund_balance(user_b.id, date(2026, 1, 1))
+        assert result_a["closing"] == Decimal("5200.00")  # 5000 + 200, not +75
+        assert result_b["closing"] == Decimal("1075.00")  # 1000 + 75, not +200
+
 
 @pytest.mark.django_db
 class TestBalanceSummaryEndpoint:
