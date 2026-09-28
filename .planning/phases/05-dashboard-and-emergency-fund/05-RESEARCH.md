@@ -454,17 +454,17 @@ Not applicable in the "old vs. new library approach" sense — this phase uses n
 
 **If this table is empty:** N/A — see entries above; none are compliance/retention/security-sensitive, all are implementation-shape choices reasonably inferable from established codebase conventions except A4, which needs explicit resolution.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Does D-04's "past months already computed are unaffected" need to be walked back or clarified?**
+1. **Does D-04's "past months already computed are unaffected" need to be walked back or clarified? (RESOLVED)**
    - What we know: Balances are never stored (confirmed module docstring); `get_emergency_fund_balance()` recomputes the full anchor-to-target-month range on every call using the category's **current** name at query time (per D-04's own stated matching rule).
    - What's unclear: Whether "past months already computed are unaffected" means (a) a technical guarantee the implementation must provide (which would require snapshotting the match, contradicting D-01's "not a dedicated model field"), or (b) an informal statement about historical fact that isn't meant to be tested/enforced by the code at all.
-   - Recommendation: Surface this to the user in `/gsd-discuss-phase` or as a plan-time confirmation before writing `TestGetEmergencyFundBalance`'s new test cases — the test suite's correctness depends on resolving this ambiguity, and it's cheap to resolve now versus expensive to discover via a failing/misleading test later.
+   - **Resolution:** Confirmed with user post-research. 05-CONTEXT.md's D-04 was corrected: a rename retroactively changes the entire computed history back to the anchor month on the next read — same consequence Phase 3 already accepted for editing a past Transaction. No snapshotting, no new field. Implemented in Plan 05-02.
 
-2. **Should DASH-02's percentage-of-zero-denominator return `null` (matching D-10) or `0`?**
+2. **Should DASH-02's percentage-of-zero-denominator return `null` (matching D-10) or `0`? (RESOLVED)**
    - What we know: D-10 explicitly specifies `null` for the savings % edge case. D-09 doesn't address the analogous edge case for group percentages.
    - What's unclear: Whether the user wants response-shape consistency across the whole dashboard, or considers these different enough (a whole-month savings % vs. a per-group breakdown %) to warrant different null-handling.
-   - Recommendation: Default to `null` for consistency (A1 above); flag for a one-line confirmation during planning if the planner wants certainty before implementing.
+   - **Resolution:** Confirmed with user post-research — `null` for consistency (A1 above). 05-CONTEXT.md's D-09 was amended with this clause. Implemented in Plan 05-05.
 
 ## Validation Architecture
 
