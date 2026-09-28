@@ -67,5 +67,5 @@ SEED_INCOME_CATEGORIES = [
     "Freelancing",
     "Rent",
     "Cashback",
-    "Redeemed Emergency",
+    "Redeem Emergency Fund",
 ]

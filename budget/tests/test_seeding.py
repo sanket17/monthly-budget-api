@@ -60,3 +60,18 @@ class TestSeeding:
 
         user = UserFactory()
         assert Category.objects.filter(user=user).count() == 0
+
+    def test_seeded_income_categories_use_redeem_emergency_fund_name(self, api_client):
+        """D-02: new registrations seed 'Redeem Emergency Fund', not the old
+        Phase 2 value 'Redeemed Emergency' (fixed alongside the Task 1
+        data migration renaming existing users' rows)."""
+        payload = {"email": "seeded4@example.com", "password": "securepass123"}
+        api_client.post(reverse("register"), payload)
+        income_names = set(
+            Category.objects.filter(
+                user__email="seeded4@example.com",
+                category_type=Category.CategoryType.INCOME,
+            ).values_list("name", flat=True)
+        )
+        assert "Redeem Emergency Fund" in income_names
+        assert "Redeemed Emergency" not in income_names
