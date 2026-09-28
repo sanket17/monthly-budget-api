@@ -16,11 +16,14 @@ D-12, D-14, D-19).
 """
 
 import calendar
+import threading
 from datetime import date, datetime, timezone as dt_timezone
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 import pytest
 from django.core.management import call_command
+from django.db import connection
 
 from budget.tests.factories import CategoryFactory
 from recurring.models import RecurringEntry, RecurringGenerationLog
@@ -200,3 +203,111 @@ class TestGenerationHardening:
 
         assert Transaction.objects.filter(user=user_a).count() == 1
         assert Transaction.objects.filter(user=user_b).count() == 1
+
+
+@pytest.mark.django_db
+class TestGenerationIdempotencyAndEditSemantics:
+    """
+    Plan 06-03 Task 2: idempotency surviving manual Transaction deletion,
+    real concurrent double-generation, and edit semantics for amount and
+    day_of_month (D-12, D-14, D-19).
+    """
+
+    def test_manually_deleted_transaction_not_recreated(self):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        entry = RecurringEntryFactory(
+            user=user, category=category, day_of_month=date.today().day
+        )
+
+        created = generate_for_user(user)
+        assert len(created) == 1
+        Transaction.objects.get(pk=created[0].pk).delete()
+
+        created_again = generate_for_user(user)
+
+        assert created_again == []
+        assert Transaction.objects.filter(recurring_entry=entry).count() == 0
+        assert (
+            RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
+        )
+
+    @pytest.mark.django_db(transaction=True)
+    def test_concurrent_generation_no_duplicate(self):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        entry = RecurringEntryFactory(
+            user=user, category=category, day_of_month=date.today().day
+        )
+
+        errors = []
+
+        def run():
+            try:
+                generate_for_user(user)
+            except Exception as exc:  # pragma: no cover - surfaced via errors list
+                errors.append(exc)
+            finally:
+                connection.close()
+
+        threads = [threading.Thread(target=run) for _ in range(2)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors == []
+        assert Transaction.objects.filter(recurring_entry=entry).count() == 1
+        assert (
+            RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
+        )
+
+    def test_editing_amount_affects_future_generation_only(self):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        entry = RecurringEntryFactory(
+            user=user, category=category, day_of_month=1, amount="100.00"
+        )
+
+        current_month_start = date.today().replace(day=1)
+        last_month_start = _months_before(current_month_start, 1)
+        backdated_created_at = datetime(
+            last_month_start.year, last_month_start.month, 1, tzinfo=dt_timezone.utc
+        )
+        RecurringEntry.all_objects.filter(pk=entry.pk).update(
+            created_at=backdated_created_at
+        )
+
+        first_run = generate_for_user(user, upto_month=last_month_start)
+        assert len(first_run) == 1
+        last_month_txn = first_run[0]
+        assert last_month_txn.amount == Decimal("100.00")
+
+        entry.amount = Decimal("250.00")
+        entry.save(update_fields=["amount"])
+
+        second_run = generate_for_user(user)
+        assert len(second_run) == 1
+        this_month_txn = second_run[0]
+        assert this_month_txn.amount == Decimal("250.00")
+
+        last_month_txn.refresh_from_db()
+        assert last_month_txn.amount == Decimal("100.00")
+
+    def test_day_change_effective_next_month_only(self):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        today_day = date.today().day
+        entry = RecurringEntryFactory(user=user, category=category, day_of_month=today_day)
+
+        first_run = generate_for_user(user)
+        assert len(first_run) == 1
+
+        new_day = today_day - 1 if today_day > 1 else today_day + 1
+        entry.day_of_month = new_day
+        entry.save(update_fields=["day_of_month"])
+
+        second_run = generate_for_user(user)
+
+        assert second_run == []
+        assert Transaction.objects.filter(recurring_entry=entry).count() == 1
