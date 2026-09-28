@@ -88,7 +88,8 @@ def generate_for_entry(entry, ceiling: date, today: date):
     D-09: the generated Transaction is always dated with its original
     scheduled date, never the date generation actually ran.
     """
-    creation_month = entry.created_at.date().replace(day=1)
+    creation_date_local = entry.created_at.astimezone(ZoneInfo(entry.user.timezone)).date()
+    creation_month = creation_date_local.replace(day=1)
     last_log = entry.generation_log.order_by("-period").first()
     if last_log is None:
         start = creation_month
@@ -99,7 +100,7 @@ def generate_for_entry(entry, ceiling: date, today: date):
     current = start
     while current <= ceiling:
         scheduled = scheduled_date_for(current.year, current.month, entry.day_of_month)
-        if current == creation_month and scheduled < entry.created_at.date():
+        if current == creation_month and scheduled < creation_date_local:
             current = _next_month(current)
             continue
         if scheduled > today:
