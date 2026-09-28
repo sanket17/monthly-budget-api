@@ -173,3 +173,13 @@ None — no external service configuration required.
 ---
 *Phase: 06-recurring-entries*
 *Completed: 2026-09-28*
+
+## Self-Check: PASSED
+
+- FOUND: recurring/views.py
+- FOUND: recurring/urls.py
+- FOUND: recurring/tests/test_recurring_entries.py
+- FOUND: .planning/phases/06-recurring-entries/06-02-SUMMARY.md
+- FOUND: 8848d5b (Task 1 RED commit)
+- FOUND: 7068770 (Task 1 GREEN commit)
+- FOUND: 89395cf (Task 2 GREEN commit)
