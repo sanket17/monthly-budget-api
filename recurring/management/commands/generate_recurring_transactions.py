@@ -1,4 +1,5 @@
 import itertools
+import logging
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
@@ -6,6 +7,8 @@ from django.core.management.base import BaseCommand
 from recurring.services import generate_for_user
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -31,7 +34,13 @@ class Command(BaseCommand):
         total_created = 0
         for _timezone, group in itertools.groupby(users, key=lambda u: u.timezone):
             for user in group:
-                created = generate_for_user(user)
+                try:
+                    created = generate_for_user(user)
+                except Exception:
+                    logger.exception(
+                        "Recurring generation failed for user %s", user.id
+                    )
+                    continue
                 total_created += len(created)
 
         self.stdout.write(
