@@ -158,7 +158,16 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Running the monthly generation process creates transactions for all recurring entries on their scheduled day
   4. Running the generation process a second time for the same month does not create duplicate transactions
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+**Wave 1**
+
+- [ ] 06-01-PLAN.md — Tracer: `recurring` app (RecurringEntry/RecurringGenerationLog, service, CRUD, cron command), CustomUser.timezone, Transaction.recurring_entry
+
+**Wave 2** *(blocked on Wave 1 completion, parallel with each other)*
+
+- [ ] 06-02-PLAN.md — RecurringEntry reactivation + full CRUD test suite, manual generate endpoint (D-22..26)
+- [ ] 06-03-PLAN.md — Backfill/idempotency/concurrency edge-case hardening, category referential-integrity block (D-15)
 
 ## Progress
 
@@ -172,4 +181,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Transactions and Balance | 1/1 | Complete | 2026-09-16 |
 | 4. Credit Cards | 1/1 | Complete | 2026-09-16 |
 | 5. Dashboard and Emergency Fund | 5/5 | Complete    | 2026-09-28 |
-| 6. Recurring Entries | 0/TBD | Not started | - |
+| 6. Recurring Entries | 0/3 | Not started | - |
