@@ -140,3 +140,83 @@ class TestGetDashboardTotals:
         expense_category.save()
         result = get_dashboard(user.id, date(2026, 1, 1))
         assert result["expense_totals"]["actual"] == Decimal("75.00")
+
+
+@pytest.mark.django_db
+class TestGetDashboardExpenseBreakdown:
+    def _by_group(self, result):
+        return {entry["group"]: entry for entry in result["expense_breakdown"]}
+
+    def test_breakdown_reports_actual_planned_and_both_percentages(self, user_factory):
+        user = user_factory()
+        # needs: 450 actual / 600 planned
+        # wants: 300 actual / 400 planned
+        # investment: 200 actual / 150 planned
+        # other: 50 actual / 50 planned
+        # totals: 1000 actual / 1200 planned
+        specs = [
+            ("needs", "450.00", "600.00"),
+            ("wants", "300.00", "400.00"),
+            ("investment", "200.00", "150.00"),
+            ("other", "50.00", "50.00"),
+        ]
+        for group, actual_amount, planned_amount in specs:
+            category = CategoryFactory(user=user, category_type="expense", group=group)
+            TransactionFactory(
+                user=user, category=category, amount=actual_amount, date=date(2026, 1, 10)
+            )
+            PlannedAmountFactory(
+                user=user,
+                category=category,
+                amount=planned_amount,
+                effective_from=date(2026, 1, 1),
+            )
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        by_group = self._by_group(result)
+        assert by_group["needs"]["actual"] == Decimal("450.00")
+        assert by_group["needs"]["planned"] == Decimal("600.00")
+        assert by_group["needs"]["percent_of_actual"] == Decimal("0.45")
+        assert by_group["needs"]["percent_of_planned"] == Decimal("0.5")
+        assert set(by_group.keys()) == {"needs", "wants", "investment", "other"}
+
+    def test_breakdown_percent_of_actual_null_when_total_actual_is_zero(self, user_factory):
+        user = user_factory()
+        # No transactions at all -> total actual expense spending is 0 for
+        # every group, including one with a nonzero planned amount.
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        PlannedAmountFactory(
+            user=user, category=category, amount="600.00", effective_from=date(2026, 1, 1)
+        )
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        by_group = self._by_group(result)
+        for group in ("needs", "wants", "investment", "other"):
+            assert by_group[group]["percent_of_actual"] is None
+            assert by_group[group]["actual"] == Decimal("0.00")
+
+    def test_breakdown_percent_of_planned_null_when_total_planned_is_zero(self, user_factory):
+        user = user_factory()
+        # No PlannedAmount rows at all -> total planned expense budget is 0
+        # for every group, including one with a nonzero actual amount.
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        TransactionFactory(
+            user=user, category=category, amount="450.00", date=date(2026, 1, 10)
+        )
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        by_group = self._by_group(result)
+        for group in ("needs", "wants", "investment", "other"):
+            assert by_group[group]["percent_of_planned"] is None
+            assert by_group[group]["planned"] == Decimal("0.00")
+
+    def test_breakdown_soft_deleted_category_still_counts_toward_group_actual(
+        self, user_factory
+    ):
+        user = user_factory()
+        category = CategoryFactory(user=user, category_type="expense", group="wants")
+        TransactionFactory(
+            user=user, category=category, amount="120.00", date=date(2026, 1, 8)
+        )
+        category.is_active = False
+        category.save()
+        result = get_dashboard(user.id, date(2026, 1, 1))
+        by_group = self._by_group(result)
+        assert by_group["wants"]["actual"] == Decimal("120.00")
