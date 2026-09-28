@@ -57,19 +57,19 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **BALN-01**: User can manually set their initial bank balance
 - [x] **BALN-02**: Bank balance auto-calculates each month (previous balance + income - expenses)
 - [x] **BALN-03**: User can manually set their initial emergency fund balance
-- [ ] **BALN-04**: Emergency fund balance auto-increases when user adds an "Emergency Fund" expense
-- [ ] **BALN-05**: Emergency fund balance auto-decreases when user adds a "Redeem Emergency Fund" income
+- [x] **BALN-04**: Emergency fund balance auto-increases when user adds an "Emergency Fund" expense
+- [x] **BALN-05**: Emergency fund balance auto-decreases when user adds a "Redeem Emergency Fund" income
 - [x] **BALN-06**: User can view bank balance and emergency fund balance at start and end of any month
 
 ### Dashboard
 
-- [ ] **DASH-01**: User can view savings percentage and amount for any month
+- [x] **DASH-01**: User can view savings percentage and amount for any month
 - [x] **DASH-02**: User can view spending breakdown by Needs/Wants/Investment/Other (% and amount)
-- [ ] **DASH-03**: User can view total planned vs actual for expenses
-- [ ] **DASH-04**: User can view total planned vs actual for income
-- [ ] **DASH-05**: User can view total planned vs actual for credit card usage
-- [ ] **DASH-06**: User can view bank balance at start and end of month
-- [ ] **DASH-07**: User can view emergency fund balance at start and end of month
+- [x] **DASH-03**: User can view total planned vs actual for expenses
+- [x] **DASH-04**: User can view total planned vs actual for income
+- [x] **DASH-05**: User can view total planned vs actual for credit card usage
+- [x] **DASH-06**: User can view bank balance at start and end of month
+- [x] **DASH-07**: User can view emergency fund balance at start and end of month
 
 ## v2 Requirements
 
@@ -139,16 +139,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BALN-01 | Phase 3 | Complete |
 | BALN-02 | Phase 3 | Complete |
 | BALN-03 | Phase 3 | Complete |
-| BALN-04 | Phase 5 | Pending |
-| BALN-05 | Phase 5 | Pending |
+| BALN-04 | Phase 5 | Complete |
+| BALN-05 | Phase 5 | Complete |
 | BALN-06 | Phase 3 | Complete |
-| DASH-01 | Phase 5 | Pending |
+| DASH-01 | Phase 5 | Complete |
 | DASH-02 | Phase 5 | Complete |
-| DASH-03 | Phase 5 | Pending |
-| DASH-04 | Phase 5 | Pending |
-| DASH-05 | Phase 5 | Pending |
-| DASH-06 | Phase 5 | Pending |
-| DASH-07 | Phase 5 | Pending |
+| DASH-03 | Phase 5 | Complete |
+| DASH-04 | Phase 5 | Complete |
+| DASH-05 | Phase 5 | Complete |
+| DASH-06 | Phase 5 | Complete |
+| DASH-07 | Phase 5 | Complete |
 
 **Coverage:**
 

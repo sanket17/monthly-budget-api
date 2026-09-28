@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Budget Structure** - Expense and income category CRUD with Needs/Wants/Investment/Other grouping, and carry-over planned amounts (Complete 2026-07-04)
 - [x] **Phase 3: Transactions and Balance** - Expense and income transaction CRUD, month-scoped filtering, historical browsing, and automatic bank balance tracking (Complete 2026-09-16)
 - [x] **Phase 4: Credit Cards** - Standalone credit card tracking with per-card planned vs actual comparison (Complete 2026-09-16)
-- [ ] **Phase 5: Dashboard and Emergency Fund** - Unified dashboard API aggregating savings %, category breakdowns, planned vs actual, and emergency fund auto-tracking
+- [x] **Phase 5: Dashboard and Emergency Fund** - Unified dashboard API aggregating savings %, category breakdowns, planned vs actual, and emergency fund auto-tracking (completed 2026-09-28)
 - [ ] **Phase 6: Recurring Entries** - Monthly recurring expense and income generation with idempotent auto-creation
 
 ## Phase Details
@@ -129,7 +129,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Dashboard response includes bank balance at the start and end of the month
   5. Adding an "Emergency Fund" expense increases the emergency fund balance; adding a "Redeem Emergency Fund" income decreases it; both are reflected on the dashboard for that month
 
-**Plans**: 4/5 plans executed (0/5 complete)
+**Plans**: 5/5 plans executed (0/5 complete)
 **UI hint**: no
 
 **Wave 1**
@@ -144,7 +144,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 3** *(blocked on Wave 2 completion — shares dashboard/services.py and dashboard/tests/test_dashboard.py with Plan 05-04)*
 
-- [ ] 05-05-PLAN.md — Dashboard Needs/Wants/Investment/Other breakdown (DASH-02) + full integration/security tests
+- [x] 05-05-PLAN.md — Dashboard Needs/Wants/Investment/Other breakdown (DASH-02) + full integration/security tests
 
 ### Phase 6: Recurring Entries
 
@@ -171,5 +171,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Budget Structure | 4/4 | Complete | 2026-07-04 |
 | 3. Transactions and Balance | 1/1 | Complete | 2026-09-16 |
 | 4. Credit Cards | 1/1 | Complete | 2026-09-16 |
-| 5. Dashboard and Emergency Fund | 4/5 | In Progress|  |
+| 5. Dashboard and Emergency Fund | 5/5 | Complete    | 2026-09-28 |
 | 6. Recurring Entries | 0/TBD | Not started | - |
