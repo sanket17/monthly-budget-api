@@ -1,0 +1,43 @@
+{
+  "contract": "1.0.0",
+  "flavor": "core",
+  "milestone": null,
+  "phases": [
+    {
+      "number": "1",
+      "name": "Foundation",
+      "status": "complete"
+    },
+    {
+      "number": "2",
+      "name": "Budget Structure",
+      "status": "complete"
+    },
+    {
+      "number": "3",
+      "name": "Transactions and Balance",
+      "status": "complete"
+    },
+    {
+      "number": "4",
+      "name": "Credit Cards",
+      "status": "complete"
+    },
+    {
+      "number": "5",
+      "name": "Dashboard and Emergency Fund",
+      "status": "complete"
+    },
+    {
+      "number": "6",
+      "name": "Recurring Entries",
+      "status": "pending"
+    }
+  ],
+  "next": {
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 06 of 6 · 71% · executing"
+  },
+  "updated_at": "2026-09-28T15:08:02.711Z"
+}
