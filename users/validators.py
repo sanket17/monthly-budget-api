@@ -9,6 +9,6 @@ def validate_iana_timezone(value):
     """
     try:
         ZoneInfo(value)
-    except ZoneInfoNotFoundError:
+    except (ZoneInfoNotFoundError, ValueError, TypeError):
         raise serializers.ValidationError("Unknown timezone.")
     return value
