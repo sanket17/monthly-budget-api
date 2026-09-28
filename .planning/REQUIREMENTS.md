@@ -64,7 +64,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Dashboard
 
 - [ ] **DASH-01**: User can view savings percentage and amount for any month
-- [ ] **DASH-02**: User can view spending breakdown by Needs/Wants/Investment/Other (% and amount)
+- [x] **DASH-02**: User can view spending breakdown by Needs/Wants/Investment/Other (% and amount)
 - [ ] **DASH-03**: User can view total planned vs actual for expenses
 - [ ] **DASH-04**: User can view total planned vs actual for income
 - [ ] **DASH-05**: User can view total planned vs actual for credit card usage
@@ -143,7 +143,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BALN-05 | Phase 5 | Pending |
 | BALN-06 | Phase 3 | Complete |
 | DASH-01 | Phase 5 | Pending |
-| DASH-02 | Phase 5 | Pending |
+| DASH-02 | Phase 5 | Complete |
 | DASH-03 | Phase 5 | Pending |
 | DASH-04 | Phase 5 | Pending |
 | DASH-05 | Phase 5 | Pending |
@@ -151,6 +151,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DASH-07 | Phase 5 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 43 total
 - Mapped to phases: 43
 - Unmapped: 0 ✓
