@@ -86,7 +86,9 @@ def get_dashboard(user_id: int, month_start: date) -> dict:
         if category_type == "expense":
             expense_planned_total += amount
             if group:
-                planned_by_group[group] = planned_by_group.get(group, Decimal("0.00")) + amount
+                planned_by_group[group] = (
+                    planned_by_group.get(group, Decimal("0.00")) + amount
+                )
         elif category_type == "income":
             income_planned_total += amount
 
@@ -122,7 +124,9 @@ def get_dashboard(user_id: int, month_start: date) -> dict:
                 "actual": actual,
                 "planned": planned,
                 "percent_of_actual": (
-                    (actual / expense_total) if expense_total > Decimal("0.00") else None
+                    (actual / expense_total)
+                    if expense_total > Decimal("0.00")
+                    else None
                 ),
                 "percent_of_planned": (
                     (planned / expense_planned_total)
