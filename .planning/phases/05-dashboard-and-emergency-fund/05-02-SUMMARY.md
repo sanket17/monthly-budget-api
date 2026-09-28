@@ -141,6 +141,15 @@ The worktree environment had no `.venv`, no reachable PostgreSQL instance (no lo
 - `get_emergency_fund_balance()` is ready to be wired into `dashboard/services.py::get_dashboard()` per DASH-07 in Plan 05-04 — no further changes needed to this function for that integration.
 - No blockers for downstream plans in this wave (05-01, 05-03).
 
+## Self-Check: PASSED
+
+- FOUND: transactions/services.py
+- FOUND: transactions/tests/test_balance_summary.py
+- FOUND: .planning/phases/05-dashboard-and-emergency-fund/05-02-SUMMARY.md
+- FOUND: c0b4869 (Task 1 commit)
+- FOUND: 6a7ca80 (Task 2 commit)
+- FOUND: 54d700d (plan metadata commit)
+
 ---
 *Phase: 05-dashboard-and-emergency-fund*
 *Completed: 2026-09-28*
