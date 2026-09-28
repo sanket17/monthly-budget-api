@@ -106,8 +106,19 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Dashboard response includes total planned vs actual for expenses, income, and credit cards
   4. Dashboard response includes bank balance at the start and end of the month
   5. Adding an "Emergency Fund" expense increases the emergency fund balance; adding a "Redeem Emergency Fund" income decreases it; both are reflected on the dashboard for that month
-**Plans**: TBD
+**Plans**: 5 plans (0/5 complete)
 **UI hint**: no
+
+**Wave 1**
+- [ ] 05-01-PLAN.md — Rename seeded income category "Redeemed Emergency" → "Redeem Emergency Fund" (D-02 data migration + seed constant fix)
+- [ ] 05-02-PLAN.md — Rewrite get_emergency_fund_balance() to walk-forward algorithm, inverted polarity (D-11, BALN-04/05)
+- [ ] 05-03-PLAN.md — Credit card aggregate-across-active-cards helper (DASH-05 prereq, D-08)
+
+**Wave 2** *(blocked on Wave 1 completion — needs Plan 05-02's rewritten function and Plan 05-03's new aggregate helpers)*
+- [ ] 05-04-PLAN.md — Dashboard app: tracer endpoint (bank + EF balance passthrough), savings calc (DASH-01), planned-vs-actual totals (DASH-03/04/05)
+
+**Wave 3** *(blocked on Wave 2 completion — shares dashboard/services.py and dashboard/tests/test_dashboard.py with Plan 05-04)*
+- [ ] 05-05-PLAN.md — Dashboard Needs/Wants/Investment/Other breakdown (DASH-02) + full integration/security tests
 
 ### Phase 6: Recurring Entries
 **Goal**: Users can define recurring monthly expenses and income that are automatically created each month without manual entry
@@ -131,5 +142,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Budget Structure | 4/4 | Complete | 2026-07-04 |
 | 3. Transactions and Balance | 1/1 | Complete | 2026-09-16 |
 | 4. Credit Cards | 1/1 | Complete | 2026-09-16 |
-| 5. Dashboard and Emergency Fund | 0/TBD | Not started | - |
+| 5. Dashboard and Emergency Fund | 0/5 | Not started | - |
 | 6. Recurring Entries | 0/TBD | Not started | - |
