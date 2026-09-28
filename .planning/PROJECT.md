@@ -20,14 +20,14 @@ Users can see exactly where their money goes each month — planned vs actual �
 - [x] Historical month browsing — view past months' data and compare trends — Validated in Phase 3: Transactions and Balance
 - [x] Calendar month cycle (1st to last day) — Validated in Phase 3: Transactions and Balance
 - [x] Bank balance tracking — manual initial entry, then auto-calculated (prev balance + income - expenses) — Validated in Phase 3: Transactions and Balance
-- [x] Emergency fund initial balance (manual entry, viewable per month) — Validated in Phase 3: Transactions and Balance; auto-adjustment via "Emergency Fund"/"Redeem Emergency Fund" transaction types is still Active (Phase 5)
+- [x] Emergency fund initial balance (manual entry, viewable per month) — Validated in Phase 3: Transactions and Balance
 - [x] Credit card tracking (separate from expenses) with name, planned, and actual amounts — Validated in Phase 4: Credit Cards
+- [x] Emergency fund auto-adjustment — increases via "Emergency Fund" expense type, decreases via "Redeem Emergency Fund" income type — Validated in Phase 5: Dashboard and Emergency Fund
+- [x] Dashboard data API: savings %, breakdown by Needs/Wants/Investment/Other (% and amount), planned vs actual for income/expenses/credit cards, bank balance and emergency fund at start and end of month — Validated in Phase 5: Dashboard and Emergency Fund
 
 ### Active
 
 - [ ] Recurring monthly entries (expenses and income) that auto-add on a set date each month
-- [ ] Emergency fund auto-adjustment — increases via "Emergency Fund" expense type, decreases via "Redeem Emergency Fund" income type
-- [ ] Dashboard data API: savings %, breakdown by Needs/Wants/Investment/Other (% and amount), planned vs actual for income/expenses/credit cards, bank balance and emergency fund at start and end of month
 
 ### Out of Scope
 
@@ -40,7 +40,7 @@ Users can see exactly where their money goes each month — planned vs actual �
 
 ## Current State
 
-Phase 4 (Credit Cards) complete — CreditCard model (soft-delete via is_active, same pattern as Category; static planned_amount field, no carry-forward history) and CreditCardEntry model (hard-delete, no category field — entries belong to a card, kept fully independent of the expense/income category system), both IDOR-safe. CARD-05 planned-vs-actual served by an actual_amount SerializerMethodField on CreditCardSerializer, computed per request via a month-scoped Sum aggregation service, same pattern as budget's planned_amount field. 73/73 tests passing. Next: Phase 5 (Dashboard and Emergency Fund).
+Phase 5 (Dashboard and Emergency Fund) complete — new model-less `dashboard` app with a single unified `GET /api/dashboard/` endpoint composing bank balance, emergency fund balance, savings, and planned-vs-actual totals (expense/income/credit card) plus a Needs/Wants/Investment/Other breakdown, all scoped to `request.user`. Emergency fund balance now walks forward like bank balance (previously a flat Phase 3 stub) — an "Emergency Fund" expense increases it, a "Redeem Emergency Fund" income decreases it, matched by case-insensitive category name. A data migration corrected Phase 2's seeded income category name from "Redeemed Emergency" to "Redeem Emergency Fund" to match the requirement wording; a code-review finding caught and fixed a data-corruption risk in that migration's reverse operation (now irreversible by design). Credit card spending has no effect on bank balance (tracked fully separately, confirmed decision), but the dashboard's own savings figure does subtract credit card actuals. 107/107 tests passing against real PostgreSQL. Next: Phase 6 (Recurring Entries).
 
 ## Context
 
@@ -63,7 +63,7 @@ Phase 4 (Credit Cards) complete — CreditCard model (soft-delete via is_active,
 |----------|-----------|---------|
 | DRF as backend framework | User preference, Python ecosystem | Validated Phase 1 |
 | Credit cards tracked separately from expenses | Reflects user's existing spreadsheet workflow | Validated Phase 4 |
-| Emergency fund via special expense/income types | Simpler than a separate transaction system, matches user's mental model | — Pending |
+| Emergency fund via special expense/income types | Simpler than a separate transaction system, matches user's mental model | Validated Phase 5 |
 | Planned amounts carry over until changed | Reduces monthly setup friction | Validated Phase 2 |
 | New users seeded with real category taxonomy (not generic defaults) | User provided actual spreadsheet; matches their mental model on day one | Validated Phase 2 |
 | Category soft-delete (is_active flag, never hard-delete) | Preserves historical transaction/planned-amount references | Validated Phase 2 |
@@ -74,6 +74,10 @@ Phase 4 (Credit Cards) complete — CreditCard model (soft-delete via is_active,
 | CreditCard soft-delete (is_active flag, never hard-delete) | Preserves historical CreditCardEntry references, same pattern as Category; confirmed with user rather than assumed | Validated Phase 4 |
 | CreditCardEntry has no category field — separate from Transaction | Keeps credit cards fully independent of the expense/income category system, per the "tracked separately" decision above | Validated Phase 4 |
 | Multi-user from the start | User wants others to be able to register and use the system | Validated Phase 1 |
+| Credit card spending has no effect on bank balance | Bank balance stays Transaction-only (unchanged from Phase 3); credit cards are tracked fully independently per the Phase 4 decision | Validated Phase 5 |
+| Dashboard has its own savings figure, separate from bank balance | end_balance = start_balance + income − expense − credit card expense; explicit user-supplied formula, distinct from the unchanged BALN-02 bank balance | Validated Phase 5 |
+| Emergency fund category matched by case-insensitive name, not a dedicated field | Simplest option; no schema change for a two-category special case | Validated Phase 5 |
+| Data migration reversing a category rename must be irreversible when a later seed change reuses the same target name | A name-based reverse can't distinguish rows it renamed from rows seeded fresh with the new name post-migration — caught by code review (CR-01), fixed via RunPython.noop | Validated Phase 5 |
 
 ## Evolution
 
@@ -93,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-09-16 after Phase 4 (Credit Cards) completion*
+*Last updated: 2026-09-28 after Phase 5 (Dashboard and Emergency Fund) completion*
