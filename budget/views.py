@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from users.mixins import UserScopedMixin
@@ -31,6 +32,16 @@ class CategoryViewSet(UserScopedMixin, viewsets.ModelViewSet):
         return context
 
     def perform_destroy(self, instance):
+        # D-15: a category referenced by an active RecurringEntry cannot be
+        # soft-deleted — reject before touching is_active. instance is
+        # already scoped to request.user via UserScopedMixin, so this check
+        # only ever inspects the requester's own reverse relation (never a
+        # cross-user information leak, see 06-RESEARCH.md T-06-09).
+        if instance.recurring_entries.filter(is_active=True).exists():
+            raise ValidationError(
+                "Cannot delete a category referenced by an active recurring "
+                "entry. Change or delete the recurring entry first."
+            )
         instance.is_active = False
         instance.save(update_fields=["is_active"])
 
