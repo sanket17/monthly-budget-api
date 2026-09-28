@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "transactions",
     # Project apps — credit_cards app created in Phase 4
     "credit_cards",
+    # Project apps — dashboard app created in Phase 5
+    "dashboard",
 ]
 
 MIDDLEWARE = [
