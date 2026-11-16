@@ -83,6 +83,7 @@ None yet.
 
 | Date | Slug | Result |
 |------|------|--------|
+| 2026-11-17 | api-docs-for-mobile | OpenAPI + Postman collection/environments + integration guide in `docs/api/`; 307 tests (`.planning/quick/20261117-api-docs-for-mobile/`) |
 | 2026-11-16 | deploy-prep-oracle-supabase | Prod settings, Docker/Caddy stack, cron, backup, Supabase lockdown, DEPLOY.md (`.planning/quick/20261116-deploy-prep-oracle-supabase/`) |
 | 2026-11-16 | close-v1-tech-debt | G3-G9, reactivate race, docs, lint closed; 213 tests pass (`.planning/quick/20261116-close-v1-tech-debt/`) |
 

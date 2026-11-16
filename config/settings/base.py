@@ -130,6 +130,13 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
+    # Server URLs, public/authenticated split, examples and documented errors
+    # are added in config/api_docs.py. Keep the enum hook first (it is the
+    # drf-spectacular default).
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "config.api_docs.enhance_schema",
+    ],
 }
 
 # CORS — allow-all-origins setting intentionally never configured here

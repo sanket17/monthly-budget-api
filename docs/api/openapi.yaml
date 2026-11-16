@@ -1,0 +1,2981 @@
+openapi: 3.0.3
+info:
+  title: Personal Budget API
+  version: 1.0.0
+  description: Multi-user personal budget management API
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: 'Returns a short-lived `access` token (60 minutes) and a `refresh`
+        token (7 days). Send `Authorization: Bearer <access>` on every other request.
+        Limited to 5 requests/minute per IP.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+            example:
+              email: asha@example.com
+              password: S3cure-pass!
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+            example:
+              email: asha@example.com
+              password: S3cure-pass!
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+            example:
+              email: asha@example.com
+              password: S3cure-pass!
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Wrong credentials, or the token is invalid/expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '429':
+          description: Too many requests; retry later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Log in
+      security: []
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Revokes the refresh token. Discard both tokens on the device afterwards.
+        No Authorization header is needed.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+            example:
+              refresh: <refresh>
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+            example:
+              refresh: <refresh>
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenBlacklistRequest'
+            example:
+              refresh: <refresh>
+        required: true
+      responses:
+        '200':
+          description: No response body
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Wrong credentials, or the token is invalid/expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Log out (revoke refresh token)
+      security: []
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Creates the account and seeds 49 default categories. `timezone`
+        must be an IANA name (e.g. `Asia/Kolkata`, default `UTC`) and decides what
+        "today" means for recurring entries. A taken email returns a generic 400 on
+        purpose. Limited to 5 requests/minute per IP.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+            example:
+              email: asha@example.com
+              password: S3cure-pass!
+              first_name: Asha
+              last_name: Patil
+              timezone: Asia/Kolkata
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+            example:
+              email: asha@example.com
+              password: S3cure-pass!
+              first_name: Asha
+              last_name: Patil
+              timezone: Asia/Kolkata
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+            example:
+              email: asha@example.com
+              password: S3cure-pass!
+              first_name: Asha
+              last_name: Patil
+              timezone: Asia/Kolkata
+        required: true
+      security: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '429':
+          description: Too many requests; retry later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Register
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: 'Refresh tokens **rotate**: the response contains a NEW `refresh`
+        token and the one you sent is revoked. Always store the new one. A 401 here
+        means the user must log in again.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+            example:
+              refresh: <refresh>
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+            example:
+              refresh: <refresh>
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+            example:
+              refresh: <refresh>
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Wrong credentials, or the token is invalid/expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Refresh access token
+      security: []
+  /api/balance/:
+    get:
+      operationId: balance_retrieve
+      description: '`opening`/`closing` are null when no initial balance is set or
+        the month is before it. Bank balance counts transactions only, never credit-card
+        entries.'
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      tags:
+      - balance
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSummary'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get bank and emergency-fund balance for a month
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: 'Returns a plain JSON array (not paginated) of the user''s active
+        categories. `planned_amount` is the planned amount in effect for `?month=`
+        (default: current month).'
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List categories
+    post:
+      operationId: categories_create
+      description: Expense categories require `group` (`needs`, `wants`, `investment`,
+        `other`); income categories must NOT have a group. Names are unique among
+        the user's active categories of the same type.
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+            example:
+              name: Groceries
+              category_type: expense
+              group: needs
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+            example:
+              name: Groceries
+              category_type: expense
+              group: needs
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+            example:
+              name: Groceries
+              category_type: expense
+              group: needs
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create category
+  /api/categories/{id}/:
+    get:
+      operationId: categories_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get category
+    put:
+      operationId: categories_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+            example:
+              name: Groceries
+              category_type: expense
+              group: needs
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+            example:
+              name: Groceries
+              category_type: expense
+              group: needs
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+            example:
+              name: Groceries
+              category_type: expense
+              group: needs
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Replace category (PUT)
+    patch:
+      operationId: categories_partial_update
+      description: '`category_type` cannot be changed once the category has transactions,
+        planned amounts or recurring entries (400). Renaming and moving between groups
+        is always allowed.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+            example:
+              name: Groceries & Staples
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+            example:
+              name: Groceries & Staples
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryRequest'
+            example:
+              name: Groceries & Staples
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Update category (PATCH)
+    delete:
+      operationId: categories_destroy
+      description: 'Soft delete: history is kept. Returns 400 (body is a JSON array
+        with one message) while an active recurring entry uses the category.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Delete category
+  /api/credit-card-entries/:
+    get:
+      operationId: credit_card_entries_list
+      description: Paginated and limited to one month (`?month=`, default current),
+        optionally to one card (`?card=<id>`). Response is `{count, next, previous,
+        results}`.
+      parameters:
+      - in: query
+        name: card
+        schema:
+          type: integer
+        description: Only entries on this credit card id.
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - credit-card-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCreditCardEntryList'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List credit card entries
+    post:
+      operationId: credit_card_entries_create
+      description: '`card` must be one of the user''s active cards. Entries never
+        affect the bank balance.'
+      tags:
+      - credit-card-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardEntryRequest'
+            example:
+              card: 1
+              amount: '1299.00'
+              date: '2026-03-12'
+              description: Online shopping
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreditCardEntryRequest'
+            example:
+              card: 1
+              amount: '1299.00'
+              date: '2026-03-12'
+              description: Online shopping
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreditCardEntryRequest'
+            example:
+              card: 1
+              amount: '1299.00'
+              date: '2026-03-12'
+              description: Online shopping
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardEntry'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create credit card entry
+  /api/credit-card-entries/{id}/:
+    get:
+      operationId: credit_card_entries_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card entry.
+        required: true
+      tags:
+      - credit-card-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardEntry'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get credit card entry
+    put:
+      operationId: credit_card_entries_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card entry.
+        required: true
+      tags:
+      - credit-card-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardEntryRequest'
+            example:
+              card: 1
+              amount: '1299.00'
+              date: '2026-03-12'
+              description: Online shopping
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreditCardEntryRequest'
+            example:
+              card: 1
+              amount: '1299.00'
+              date: '2026-03-12'
+              description: Online shopping
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreditCardEntryRequest'
+            example:
+              card: 1
+              amount: '1299.00'
+              date: '2026-03-12'
+              description: Online shopping
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardEntry'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Replace credit card entry (PUT)
+    patch:
+      operationId: credit_card_entries_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card entry.
+        required: true
+      tags:
+      - credit-card-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCreditCardEntryRequest'
+            example:
+              amount: '999.00'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCreditCardEntryRequest'
+            example:
+              amount: '999.00'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCreditCardEntryRequest'
+            example:
+              amount: '999.00'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCardEntry'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Update credit card entry (PATCH)
+    delete:
+      operationId: credit_card_entries_destroy
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card entry.
+        required: true
+      tags:
+      - credit-card-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Delete credit card entry
+  /api/credit-cards/:
+    get:
+      operationId: credit_cards_list
+      description: 'Plain array of active cards. `actual_amount` is the spend on the
+        card in `?month=` (default: current month).'
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      tags:
+      - credit-cards
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditCard'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List credit cards
+    post:
+      operationId: credit_cards_create
+      description: ''
+      tags:
+      - credit-cards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+            example:
+              name: HDFC Millennia
+              planned_amount: '15000.00'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+            example:
+              name: HDFC Millennia
+              planned_amount: '15000.00'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+            example:
+              name: HDFC Millennia
+              planned_amount: '15000.00'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCard'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create credit card
+  /api/credit-cards/{id}/:
+    get:
+      operationId: credit_cards_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card.
+        required: true
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      tags:
+      - credit-cards
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCard'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get credit card
+    put:
+      operationId: credit_cards_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card.
+        required: true
+      tags:
+      - credit-cards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+            example:
+              name: HDFC Millennia
+              planned_amount: '15000.00'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+            example:
+              name: HDFC Millennia
+              planned_amount: '15000.00'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreditCardRequest'
+            example:
+              name: HDFC Millennia
+              planned_amount: '15000.00'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCard'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Replace credit card (PUT)
+    patch:
+      operationId: credit_cards_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card.
+        required: true
+      tags:
+      - credit-cards
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCreditCardRequest'
+            example:
+              planned_amount: '20000.00'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCreditCardRequest'
+            example:
+              planned_amount: '20000.00'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCreditCardRequest'
+            example:
+              planned_amount: '20000.00'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditCard'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Update credit card (PATCH)
+    delete:
+      operationId: credit_cards_destroy
+      description: 'Soft delete: its entries are kept.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this credit card.
+        required: true
+      tags:
+      - credit-cards
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Delete credit card
+  /api/dashboard/:
+    get:
+      operationId: dashboard_retrieve
+      description: Savings, expense breakdown by group, planned-vs-actual totals and
+        balances for the month. Amounts are decimal strings; percentages are unrounded
+        decimal strings and null when the denominator is zero.
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      tags:
+      - dashboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get dashboard for a month
+  /api/initial-balances/:
+    get:
+      operationId: initial_balances_list
+      description: ''
+      tags:
+      - initial-balances
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InitialBalance'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List initial balances
+    post:
+      operationId: initial_balances_create
+      description: 'One row per `balance_type` (`bank` or `emergency_fund`): posting
+        again replaces it. `effective_month` is normalised to the 1st of the month.
+        There is no PUT/PATCH/DELETE.'
+      tags:
+      - initial-balances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitialBalanceRequest'
+            example:
+              balance_type: bank
+              amount: '50000.00'
+              effective_month: '2026-03-01'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InitialBalanceRequest'
+            example:
+              balance_type: bank
+              amount: '50000.00'
+              effective_month: '2026-03-01'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InitialBalanceRequest'
+            example:
+              balance_type: bank
+              amount: '50000.00'
+              effective_month: '2026-03-01'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitialBalance'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create initial balance
+  /api/initial-balances/{id}/:
+    get:
+      operationId: initial_balances_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this initial balance.
+        required: true
+      tags:
+      - initial-balances
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitialBalance'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get initial balance
+  /api/planned-amounts/:
+    get:
+      operationId: planned_amounts_list
+      description: ''
+      tags:
+      - planned-amounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlannedAmount'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List planned amounts
+    post:
+      operationId: planned_amounts_create
+      description: 'Append-only: there is no PUT/PATCH/DELETE. POST a new amount with
+        the month it takes effect from (`effective_from`); it applies to that month
+        and carries forward until the next one.'
+      tags:
+      - planned-amounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedAmountRequest'
+            example:
+              category: 1
+              amount: '12000.00'
+              effective_from: '2026-03-01'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlannedAmountRequest'
+            example:
+              category: 1
+              amount: '12000.00'
+              effective_from: '2026-03-01'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlannedAmountRequest'
+            example:
+              category: 1
+              amount: '12000.00'
+              effective_from: '2026-03-01'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedAmount'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create planned amount
+  /api/planned-amounts/{id}/:
+    get:
+      operationId: planned_amounts_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this planned amount.
+        required: true
+      tags:
+      - planned-amounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedAmount'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get planned amount
+  /api/recurring-entries/:
+    get:
+      operationId: recurring_entries_list
+      description: ''
+      tags:
+      - recurring-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecurringEntry'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List recurring entries
+    post:
+      operationId: recurring_entries_create
+      description: '`day_of_month` is 1-31; in shorter months it runs on the last
+        day. The category must be active and the user''s own. The server generates
+        the transactions (see Generate).'
+      tags:
+      - recurring-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringEntryRequest'
+            example:
+              category: 1
+              amount: '15000.00'
+              description: House rent
+              day_of_month: 1
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecurringEntryRequest'
+            example:
+              category: 1
+              amount: '15000.00'
+              description: House rent
+              day_of_month: 1
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecurringEntryRequest'
+            example:
+              category: 1
+              amount: '15000.00'
+              description: House rent
+              day_of_month: 1
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringEntry'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create recurring entry
+  /api/recurring-entries/{id}/:
+    get:
+      operationId: recurring_entries_retrieve
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recurring entry.
+        required: true
+      tags:
+      - recurring-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringEntry'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get recurring entry
+    put:
+      operationId: recurring_entries_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recurring entry.
+        required: true
+      tags:
+      - recurring-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringEntryRequest'
+            example:
+              category: 1
+              amount: '15000.00'
+              description: House rent
+              day_of_month: 1
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecurringEntryRequest'
+            example:
+              category: 1
+              amount: '15000.00'
+              description: House rent
+              day_of_month: 1
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecurringEntryRequest'
+            example:
+              category: 1
+              amount: '15000.00'
+              description: House rent
+              day_of_month: 1
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringEntry'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Replace recurring entry (PUT)
+    patch:
+      operationId: recurring_entries_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recurring entry.
+        required: true
+      tags:
+      - recurring-entries
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRecurringEntryRequest'
+            example:
+              day_of_month: 5
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRecurringEntryRequest'
+            example:
+              day_of_month: 5
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRecurringEntryRequest'
+            example:
+              day_of_month: 5
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringEntry'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Update recurring entry (PATCH)
+    delete:
+      operationId: recurring_entries_destroy
+      description: 'Soft delete: already generated transactions stay.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recurring entry.
+        required: true
+      tags:
+      - recurring-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Delete recurring entry
+  /api/recurring-entries/{id}/reactivate/:
+    patch:
+      operationId: recurring_entries_reactivate_partial_update
+      description: Takes no body. Returns 400 if the entry's category was deleted.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this recurring entry.
+        required: true
+      tags:
+      - recurring-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringEntry'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Reactivate recurring entry
+  /api/recurring-entries/generate/:
+    post:
+      operationId: recurring_entries_generate_create
+      description: Creates any due transactions up to today (in the user's timezone)
+        for the current month. Idempotent; returns only the ones created (often `[]`).
+      tags:
+      - recurring-entries
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Generate this month's transactions
+  /api/transactions/:
+    get:
+      operationId: transactions_list
+      description: 'Paginated and limited to ONE calendar month: `?month=YYYY-MM`
+        (default: current month). Use `page` / `page_size` (default 20, max 100).
+        Newest first. Response is `{count, next, previous, results}`.'
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st).
+          Defaults to the current month.
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - transactions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactionList'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: List transactions
+    post:
+      operationId: transactions_create
+      description: Whether it is income or expense comes from the chosen category.
+        `amount` must be greater than 0. The category must belong to the user. `recurring_entry`
+        is set by the server for generated transactions.
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              category: 1
+              amount: '450.00'
+              date: '2026-03-15'
+              description: Weekly groceries
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              category: 1
+              amount: '450.00'
+              date: '2026-03-15'
+              description: Weekly groceries
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              category: 1
+              amount: '450.00'
+              date: '2026-03-15'
+              description: Weekly groceries
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Create transaction
+  /api/transactions/{id}/:
+    get:
+      operationId: transactions_retrieve
+      description: Detail, update and delete work for a transaction in ANY month;
+        the month window applies only to the list.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get transaction
+    put:
+      operationId: transactions_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this transaction.
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              category: 1
+              amount: '450.00'
+              date: '2026-03-15'
+              description: Weekly groceries
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              category: 1
+              amount: '450.00'
+              date: '2026-03-15'
+              description: Weekly groceries
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionRequest'
+            example:
+              category: 1
+              amount: '450.00'
+              date: '2026-03-15'
+              description: Weekly groceries
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Replace transaction (PUT)
+    patch:
+      operationId: transactions_partial_update
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this transaction.
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionRequest'
+            example:
+              amount: '475.00'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionRequest'
+            example:
+              amount: '475.00'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionRequest'
+            example:
+              amount: '475.00'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Update transaction (PATCH)
+    delete:
+      operationId: transactions_destroy
+      description: ''
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this transaction.
+        required: true
+      tags:
+      - transactions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+        '404':
+          description: Not found (or not the user's).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Delete transaction
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: |-
+        GET/PATCH /api/users/me/
+
+        Returns or updates the authenticated user's own profile.
+        Scoped strictly to request.user — no user ID in the URL
+        (prevents BOLA: attacker cannot substitute another user's ID).
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Get my profile
+    patch:
+      operationId: users_me_partial_update
+      description: |-
+        GET/PATCH /api/users/me/
+
+        Returns or updates the authenticated user's own profile.
+        Scoped strictly to request.user — no user ID in the URL
+        (prevents BOLA: attacker cannot substitute another user's ID).
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+            example:
+              first_name: Asha
+              last_name: Patil
+              timezone: Asia/Kolkata
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+            example:
+              first_name: Asha
+              last_name: Patil
+              timezone: Asia/Kolkata
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+            example:
+              first_name: Asha
+              last_name: Patil
+              timezone: Asia/Kolkata
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '401':
+          description: Missing, invalid or expired access token. Refresh it, or log
+            in again if refresh also fails.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetail'
+      summary: Update my profile
+components:
+  schemas:
+    BalanceSnapshot:
+      type: object
+      description: |-
+        Response shape of one balance walk (schema only, never validates input).
+        Both values are null when no InitialBalance anchor applies to the month.
+      properties:
+        opening:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        closing:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+      required:
+      - closing
+      - opening
+    BalanceSummary:
+      type: object
+      description: Response of GET /api/balance/ (schema only).
+      properties:
+        month:
+          type: string
+          format: date
+        bank_balance:
+          $ref: '#/components/schemas/BalanceSnapshot'
+        emergency_fund_balance:
+          $ref: '#/components/schemas/BalanceSnapshot'
+      required:
+      - bank_balance
+      - emergency_fund_balance
+      - month
+    BalanceTypeEnum:
+      enum:
+      - bank
+      - emergency_fund
+      type: string
+      description: |-
+        * `bank` - Bank
+        * `emergency_fund` - Emergency Fund
+    BlankEnum:
+      enum:
+      - ''
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        category_type:
+          $ref: '#/components/schemas/CategoryTypeEnum'
+        group:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GroupEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        is_active:
+          type: boolean
+          readOnly: true
+        planned_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - category_type
+      - id
+      - is_active
+      - name
+      - planned_amount
+    CategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        category_type:
+          $ref: '#/components/schemas/CategoryTypeEnum'
+        group:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GroupEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - category_type
+      - name
+    CategoryTypeEnum:
+      enum:
+      - expense
+      - income
+      type: string
+      description: |-
+        * `expense` - Expense
+        * `income` - Income
+    CreditCard:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        planned_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        is_active:
+          type: boolean
+          readOnly: true
+        actual_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+      required:
+      - actual_amount
+      - id
+      - is_active
+      - name
+      - planned_amount
+    CreditCardEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        card:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - card
+      - created_at
+      - date
+      - description
+      - id
+    CreditCardEntryRequest:
+      type: object
+      properties:
+        card:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - amount
+      - card
+      - date
+      - description
+    CreditCardRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        planned_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - name
+      - planned_amount
+    Dashboard:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+        bank_balance:
+          $ref: '#/components/schemas/BalanceSnapshot'
+        emergency_fund_balance:
+          $ref: '#/components/schemas/BalanceSnapshot'
+        savings:
+          $ref: '#/components/schemas/Savings'
+        expense_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpenseBreakdownItem'
+        expense_totals:
+          $ref: '#/components/schemas/PlannedActual'
+        income_totals:
+          $ref: '#/components/schemas/PlannedActual'
+        credit_card_totals:
+          $ref: '#/components/schemas/PlannedActual'
+      required:
+      - bank_balance
+      - credit_card_totals
+      - emergency_fund_balance
+      - expense_breakdown
+      - expense_totals
+      - income_totals
+      - month
+      - savings
+    ExpenseBreakdownItem:
+      type: object
+      properties:
+        group:
+          $ref: '#/components/schemas/GroupEnum'
+        actual:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        planned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        percent_of_actual:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,20})?$
+          nullable: true
+        percent_of_planned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,20})?$
+          nullable: true
+      required:
+      - actual
+      - group
+      - percent_of_actual
+      - percent_of_planned
+      - planned
+    GroupEnum:
+      enum:
+      - needs
+      - wants
+      - investment
+      - other
+      type: string
+      description: |-
+        * `needs` - Needs
+        * `wants` - Wants
+        * `investment` - Investment
+        * `other` - Other
+    InitialBalance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        balance_type:
+          $ref: '#/components/schemas/BalanceTypeEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        effective_month:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - balance_type
+      - created_at
+      - effective_month
+      - id
+    InitialBalanceRequest:
+      type: object
+      properties:
+        balance_type:
+          $ref: '#/components/schemas/BalanceTypeEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        effective_month:
+          type: string
+          format: date
+      required:
+      - amount
+      - balance_type
+      - effective_month
+    NullEnum:
+      enum:
+      - null
+    PaginatedCreditCardEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreditCardEntry'
+    PaginatedTransactionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    PatchedCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        category_type:
+          $ref: '#/components/schemas/CategoryTypeEnum'
+        group:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GroupEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+    PatchedCreditCardEntryRequest:
+      type: object
+      properties:
+        card:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+    PatchedCreditCardRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        planned_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+    PatchedRecurringEntryRequest:
+      type: object
+      properties:
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        day_of_month:
+          type: integer
+          maximum: 31
+          minimum: 1
+    PatchedTransactionRequest:
+      type: object
+      properties:
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+    PatchedUserProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+    PlannedActual:
+      type: object
+      properties:
+        planned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        actual:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - actual
+      - planned
+    PlannedAmount:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        effective_from:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - category
+      - created_at
+      - effective_from
+      - id
+    PlannedAmountRequest:
+      type: object
+      properties:
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        effective_from:
+          type: string
+          format: date
+      required:
+      - amount
+      - category
+      - effective_from
+    RecurringEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        description:
+          type: string
+          maxLength: 255
+        day_of_month:
+          type: integer
+          maximum: 31
+          minimum: 1
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - category
+      - created_at
+      - day_of_month
+      - description
+      - id
+      - is_active
+    RecurringEntryRequest:
+      type: object
+      properties:
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        day_of_month:
+          type: integer
+          maximum: 31
+          minimum: 1
+      required:
+      - amount
+      - category
+      - day_of_month
+      - description
+    Registration:
+      type: object
+      description: |-
+        Serializer for user registration.
+
+        Security note: validate_email uses a generic error message to prevent
+        user enumeration (ASVS Level 1 — attacker cannot tell if email is registered).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        timezone:
+          type: string
+          maxLength: 64
+      required:
+      - email
+      - id
+    RegistrationRequest:
+      type: object
+      description: |-
+        Serializer for user registration.
+
+        Security note: validate_email uses a generic error message to prevent
+        user enumeration (ASVS Level 1 — attacker cannot tell if email is registered).
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+      - email
+      - password
+    Savings:
+      type: object
+      properties:
+        start_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        end_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,20})?$
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+      required:
+      - amount
+      - end_balance
+      - percentage
+      - start_balance
+    TokenBlacklistRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          maxLength: 255
+        recurring_entry:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - category
+      - created_at
+      - date
+      - description
+      - id
+      - recurring_entry
+    TransactionRequest:
+      type: object
+      properties:
+        category:
+          type: integer
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - amount
+      - category
+      - date
+      - description
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        timezone:
+          type: string
+          maxLength: 64
+      required:
+      - email
+      - id
+    ErrorDetail:
+      type: object
+      description: Used for 401, 403, 404 and 429 responses.
+      properties:
+        detail:
+          type: string
+          example: Not found.
+        code:
+          type: string
+          description: Present on token errors, e.g. `token_not_valid`.
+          example: token_not_valid
+      required:
+      - detail
+    ValidationErrors:
+      type: object
+      description: 400 body. Keys are field names; each value is a list of messages
+        (sometimes a single string, e.g. for an invalid `month` query). A few 400s
+        return a bare JSON array of messages instead, so a client should accept all
+        three shapes.
+      additionalProperties:
+        oneOf:
+        - type: string
+        - type: array
+          items:
+            type: string
+      example:
+        amount:
+        - Amount must be greater than zero.
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+servers:
+- url: https://api.paise-kuthe-gele.com
+  description: Production
+- url: http://localhost:8000
+  description: Local development
+tags:
+- name: auth
+  x-displayName: Auth
+  description: Register, log in, refresh and revoke JWT tokens.
+- name: users
+  x-displayName: Users
+  description: The signed-in user's own profile.
+- name: categories
+  x-displayName: Categories
+  description: Expense and income categories. 49 defaults are created at registration.
+- name: planned-amounts
+  x-displayName: Planned amounts
+  description: Monthly budget per category. Append-only; carries forward month to
+    month.
+- name: transactions
+  x-displayName: Transactions
+  description: Individual income and expense records, listed one calendar month at
+    a time.
+- name: initial-balances
+  x-displayName: Initial balances
+  description: Starting bank / emergency-fund balance that the running balances grow
+    from.
+- name: balance
+  x-displayName: Balance
+  description: Opening and closing balances for a month.
+- name: credit-cards
+  x-displayName: Credit cards
+  description: Credit cards with a planned monthly amount and the actual spend per
+    month.
+- name: credit-card-entries
+  x-displayName: Credit card entries
+  description: Individual credit-card spends. They never change the bank balance.
+- name: recurring-entries
+  x-displayName: Recurring entries
+  description: Monthly auto-generated transactions (rent, salary, subscriptions).
+- name: dashboard
+  x-displayName: Dashboard
+  description: One call that composes everything for a month.

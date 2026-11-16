@@ -61,6 +61,14 @@ class RecurringEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
         instance.is_active = False
         instance.save(update_fields=["is_active"])
 
+    @extend_schema(
+        request=None,
+        responses=RecurringEntrySerializer,
+        description=(
+            "Reactivate a soft-deleted recurring entry. No request body. "
+            "Returns 400 if the entry's category has been deleted."
+        ),
+    )
     @action(detail=True, methods=["patch"])
     def reactivate(self, request, pk=None):
         """
