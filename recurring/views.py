@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -29,6 +30,29 @@ class RecurringEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
     queryset = RecurringEntry.objects.all()
     serializer_class = RecurringEntrySerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action in ("update", "partial_update"):
+            # Lock the row for the read-modify-write below (see update()).
+            queryset = queryset.select_for_update()
+        return queryset
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        """
+        PUT/PATCH read the entry, then ModelSerializer.update() re-saves
+        the WHOLE row — including the is_active value it just read. Without
+        a lock, a DELETE (soft delete) landing between the read and the
+        save is silently undone: the stale is_active=True is written back
+        and the entry resurrects and keeps generating transactions.
+
+        select_for_update() (get_queryset above) inside this atomic block
+        serializes the two: a concurrent DELETE's UPDATE waits for this
+        commit and is applied last, and a PATCH that starts after the
+        soft delete no longer matches the active-only queryset (404).
+        """
+        return super().update(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
         instance.is_active = False

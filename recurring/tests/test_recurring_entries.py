@@ -17,6 +17,7 @@ from rest_framework.test import APIClient
 from budget.tests.factories import CategoryFactory
 from recurring.models import RecurringEntry
 from recurring.tests.factories import RecurringEntryFactory
+from recurring.views import RecurringEntryViewSet
 from users.tests.factories import UserFactory
 
 
@@ -314,3 +315,79 @@ class TestConcurrentEditAndDelete:
             if statuses["patch"] == 404:
                 assert final.amount == Decimal("100.00")
                 assert final.is_active is False
+
+    def test_delete_during_patch_is_not_resurrected(self, monkeypatch):
+        """
+        Lost-update regression: a PATCH that already loaded the entry must
+        not undo a DELETE (soft delete) that lands before the PATCH saves.
+        ModelSerializer.update() re-saves the whole row, so without a row
+        lock the stale is_active=True would overwrite the soft delete.
+
+        Deterministic interleave: the PATCH is paused right after
+        get_object() (inside perform_update) until the DELETE has been
+        issued. With the row locked, the DELETE blocks until the PATCH
+        commits, so the pause times out and the DELETE is applied last.
+        Without the lock the DELETE finishes inside the pause window and
+        the PATCH then clobbers it.
+        """
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        entry = RecurringEntryFactory(
+            user=user, category=category, amount="100.00", day_of_month=7
+        )
+        url = reverse("recurring-entry-detail", args=[entry.id])
+
+        patch_loaded = threading.Event()
+        delete_done = threading.Event()
+        original_perform_update = RecurringEntryViewSet.perform_update
+
+        def paused_perform_update(self, serializer):
+            patch_loaded.set()
+            delete_done.wait(timeout=1.5)
+            return original_perform_update(self, serializer)
+
+        monkeypatch.setattr(
+            RecurringEntryViewSet, "perform_update", paused_perform_update
+        )
+
+        statuses = {}
+        errors = []
+
+        def do_patch():
+            try:
+                client = APIClient()
+                client.force_authenticate(user=user)
+                statuses["patch"] = client.patch(
+                    url, {"amount": "250.00"}, format="json"
+                ).status_code
+            except Exception as exc:  # pragma: no cover - surfaced via errors list
+                errors.append(exc)
+            finally:
+                connection.close()
+
+        def do_delete():
+            try:
+                assert patch_loaded.wait(timeout=10)
+                client = APIClient()
+                client.force_authenticate(user=user)
+                statuses["delete"] = client.delete(url).status_code
+            except Exception as exc:  # pragma: no cover - surfaced via errors list
+                errors.append(exc)
+            finally:
+                delete_done.set()
+                connection.close()
+
+        threads = [
+            threading.Thread(target=do_patch),
+            threading.Thread(target=do_delete),
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert errors == []
+        assert statuses == {"patch": 200, "delete": 204}
+        final = RecurringEntry.all_objects.get(pk=entry.pk)
+        assert final.is_active is False
+        assert final.amount == Decimal("250.00")
