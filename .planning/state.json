@@ -31,13 +31,13 @@
     {
       "number": "6",
       "name": "Recurring Entries",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 06 of 6 · 71% · executing"
+    "command": "/gsd:audit-milestone",
+    "label": "Audit milestone completion",
+    "reason": "All 6 phases complete \u00b7 100%"
   },
-  "updated_at": "2026-09-28T15:08:02.711Z"
+  "updated_at": "2026-11-16T12:00:00.000Z"
 }

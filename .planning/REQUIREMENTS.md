@@ -42,7 +42,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **RECR-02**: User can create a recurring monthly income with category, amount, description, and day of month
 - [x] **RECR-03**: Recurring entries auto-generate transactions on their set day each month
 - [x] **RECR-04**: Recurring entry generation is idempotent (no duplicates on retry)
-- [ ] **RECR-05**: User can edit and delete recurring entries
+- [x] **RECR-05**: User can edit and delete recurring entries
 
 ### Credit Cards
 
@@ -130,7 +130,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RECR-02 | Phase 6 | Complete |
 | RECR-03 | Phase 6 | Complete |
 | RECR-04 | Phase 6 | Complete |
-| RECR-05 | Phase 6 | Pending |
+| RECR-05 | Phase 6 | Complete |
 | CARD-01 | Phase 4 | Complete |
 | CARD-02 | Phase 4 | Complete |
 | CARD-03 | Phase 4 | Complete |

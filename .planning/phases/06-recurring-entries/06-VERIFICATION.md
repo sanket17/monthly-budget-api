@@ -1,8 +1,9 @@
 ---
 phase: 06-recurring-entries
 verified: 2026-09-29T00:00:00Z
-status: human_needed
-score: 33/34 must-haves verified
+status: passed
+score: 34/34 must-haves verified
+resolved: "2026-11-16 — the 3 human_verification/insufficient_spec items were closed by 06-UAT.md (3/3 passed; tests added in 014b53a, PATCH lost-update fixed in 0631e68)"
 covered_files: [".planning/REQUIREMENTS.md", ".planning/phases/06-recurring-entries/06-01-PLAN.md", ".planning/phases/06-recurring-entries/06-01-SUMMARY.md", ".planning/phases/06-recurring-entries/06-02-PLAN.md", ".planning/phases/06-recurring-entries/06-02-SUMMARY.md", ".planning/phases/06-recurring-entries/06-03-PLAN.md", ".planning/phases/06-recurring-entries/06-03-SUMMARY.md", ".planning/phases/06-recurring-entries/06-REVIEW-FIX.md", ".planning/phases/06-recurring-entries/06-REVIEW.md", "budget/tests/test_categories.py", "budget/views.py", "config/settings/base.py", "config/urls.py", "recurring/apps.py", "recurring/management/commands/generate_recurring_transactions.py", "recurring/managers.py", "recurring/migrations/0001_initial.py", "recurring/models.py", "recurring/serializers.py", "recurring/services.py", "recurring/tests/factories.py", "recurring/tests/test_generation.py", "recurring/tests/test_recurring_entries.py", "recurring/urls.py", "recurring/views.py", "requirements/base.txt", "transactions/migrations/0003_transaction_recurring_entry.py", "transactions/models.py", "transactions/serializers.py", "users/migrations/0002_customuser_timezone.py", "users/models.py", "users/serializers.py", "users/tests/test_timezone.py", "users/validators.py"]
 covered_digest: "v1:sha256:723469b71f80d11e8417c2944fa052b8939bf33b28df91db3fd97ac08e626baf"
 behavior_unverified: 0

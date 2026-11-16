@@ -2,18 +2,18 @@
 gsd_state_version: "1.0"
 current_phase: 06
 current_phase_name: Recurring Entries
-status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-09-28T15:08:02.694Z"
-last_activity: 2026-09-28
-last_activity_desc: Phase 06 execution started
+status: complete
+stopped_at: Phase 6 complete — UAT passed, all phases done
+last_updated: "2026-11-16T12:00:00.000Z"
+last_activity: 2026-11-16
+last_activity_desc: Phase 06 UAT passed, phase complete
 state_head: ab16e7e13abd2b14a0f5d69dd676fc87cdff23e9
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 17
-  completed_plans: 12
-  percent: 71
+  completed_plans: 15
+  percent: 100
 ---
 
 # Project State
@@ -23,16 +23,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-09-28)
 
 **Core value:** Users can see exactly where their money goes each month — planned vs actual — across all expense categories, income, and credit cards, with automated balance tracking.
-**Current focus:** Phase 06 — Recurring Entries
+**Current focus:** All phases complete — ready for milestone audit/close-out
 
 ## Current Position
 
-Phase: 06 (Recurring Entries) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 06
-Last activity: 2026-09-28 — Phase 06 execution started
+Phase: 06 (Recurring Entries) — COMPLETE
+Plan: 3 of 3
+Status: Phase 06 complete (UAT 3/3 passed)
+Last activity: 2026-11-16 — Phase 06 UAT passed, phase complete
 
-Progress: [███████░░░] 71%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Recent decisions affecting current work:
 - Roadmap: Recurring entries deferred to Phase 6 — depends on both transaction types and credit cards being established first
 - Phase 5: Credit card spending has no effect on bank balance — bank balance stays Transaction-only; dashboard's own savings figure is a separate number that does subtract credit card actuals
 - Phase 5: Emergency fund balance now walks forward like bank balance (was a flat Phase 3 stub) — matched by case-insensitive category name, no new model field
+- Phase 6: PATCH on a recurring entry now locks the row (select_for_update inside an atomic update()) — ModelSerializer.update() re-saves the whole row, so a stale PATCH used to resurrect a concurrently soft-deleted entry (fixed 0631e68)
 - Phase 5: Data migration reverse operations must be irreversible when a later seed change reuses the renamed target — caught by code review (CR-01) on the "Redeem Emergency Fund" category rename
 
 ### Pending Todos
@@ -75,10 +76,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Pre-Phase 6: Decide behavior for 31st-of-month recurring entries when month has 30 days (skip vs last day).
+- None. (Day-31 question resolved in Phase 6: D-01 clamps to the month's last day.)
 
 ## Session Continuity
 
-Last session: 2026-09-28T14:29:59.258Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-recurring-entries/06-CONTEXT.md
+Last session: 2026-11-16T12:00:00.000Z
+Stopped at: Phase 6 complete — UAT passed, all phases done
+Resume file: None
