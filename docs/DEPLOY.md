@@ -103,6 +103,19 @@ docker compose -f docker-compose.prod.yml up -d
 # if the release added tables: re-run deploy/supabase_lockdown.sql
 ```
 
+### Updating without GitHub access on the VM
+
+If the VM has no deploy key, push the committed tree from your machine instead
+(tracked files only, so your local `.env` is never sent):
+
+```bash
+git archive --format=tar HEAD | ssh -i ~/.ssh/budget_oracle ubuntu@VM_IP 'tar -x -C /opt/budget'
+ssh -i ~/.ssh/budget_oracle ubuntu@VM_IP 'cd /opt/budget &&
+  docker compose -f docker-compose.prod.yml build web &&
+  docker compose -f docker-compose.prod.yml run --rm web python manage.py migrate &&
+  docker compose -f docker-compose.prod.yml up -d'
+```
+
 ## 8. Backups
 
 Supabase's free plan has no downloadable backups, so `deploy/backup.sh`
