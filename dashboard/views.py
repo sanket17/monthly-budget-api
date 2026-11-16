@@ -1,9 +1,11 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from budget.utils import parse_month_param
+from budget.utils import MONTH_PARAMETER, parse_month_param
 
+from .serializers import DashboardSerializer
 from .services import get_dashboard
 
 
@@ -17,6 +19,7 @@ class DashboardView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(parameters=[MONTH_PARAMETER], responses=DashboardSerializer)
     def get(self, request):
         month_start = parse_month_param(request)
         # BOLA defense — always request.user.id, never a query param or

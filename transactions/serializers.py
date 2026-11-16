@@ -71,3 +71,19 @@ class InitialBalanceSerializer(serializers.ModelSerializer):
             },
         )
         return obj
+
+
+class BalanceSnapshotSerializer(serializers.Serializer):
+    """Response shape of one balance walk (schema only, never validates input).
+    Both values are null when no InitialBalance anchor applies to the month."""
+
+    opening = serializers.DecimalField(max_digits=14, decimal_places=2, allow_null=True)
+    closing = serializers.DecimalField(max_digits=14, decimal_places=2, allow_null=True)
+
+
+class BalanceSummarySerializer(serializers.Serializer):
+    """Response of GET /api/balance/ (schema only)."""
+
+    month = serializers.DateField()
+    bank_balance = BalanceSnapshotSerializer()
+    emergency_fund_balance = BalanceSnapshotSerializer()

@@ -1,4 +1,5 @@
 from django.db import transaction
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -7,9 +8,13 @@ from users.mixins import UserScopedMixin
 
 from .models import Category, PlannedAmount
 from .serializers import CategorySerializer, PlannedAmountSerializer
-from .utils import parse_month_param
+from .utils import MONTH_PARAMETER, parse_month_param
 
 
+@extend_schema_view(
+    list=extend_schema(parameters=[MONTH_PARAMETER]),
+    retrieve=extend_schema(parameters=[MONTH_PARAMETER]),
+)
 class CategoryViewSet(UserScopedMixin, viewsets.ModelViewSet):
     """
     /api/categories/ — CRUD for expense and income categories (BUDG-01..04).

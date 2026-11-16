@@ -1,10 +1,11 @@
 import calendar
 
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from budget.utils import parse_month_param
+from budget.utils import MONTH_PARAMETER, parse_month_param
 from users.mixins import UserScopedMixin
 
 from .models import CreditCard, CreditCardEntry
@@ -12,6 +13,10 @@ from .pagination import CreditCardEntryPagination
 from .serializers import CreditCardEntrySerializer, CreditCardSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(parameters=[MONTH_PARAMETER]),
+    retrieve=extend_schema(parameters=[MONTH_PARAMETER]),
+)
 class CreditCardViewSet(UserScopedMixin, viewsets.ModelViewSet):
     """
     /api/credit-cards/ — CRUD for credit cards (CARD-01/02) plus
@@ -38,6 +43,20 @@ class CreditCardViewSet(UserScopedMixin, viewsets.ModelViewSet):
         instance.save(update_fields=["is_active"])
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            MONTH_PARAMETER,
+            OpenApiParameter(
+                name="card",
+                type=int,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Only entries on this credit card id.",
+            ),
+        ]
+    )
+)
 class CreditCardEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
     """
     /api/credit-card-entries/ — CRUD for credit card expense entries

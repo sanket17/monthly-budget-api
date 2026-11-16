@@ -1,19 +1,25 @@
 import calendar
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from budget.utils import parse_month_param
+from budget.utils import MONTH_PARAMETER, parse_month_param
 from users.mixins import UserScopedMixin
 
 from .models import InitialBalance, Transaction
 from .pagination import TransactionPagination
-from .serializers import InitialBalanceSerializer, TransactionSerializer
+from .serializers import (
+    BalanceSummarySerializer,
+    InitialBalanceSerializer,
+    TransactionSerializer,
+)
 from .services import get_bank_balance, get_emergency_fund_balance
 
 
+@extend_schema_view(list=extend_schema(parameters=[MONTH_PARAMETER]))
 class TransactionViewSet(UserScopedMixin, viewsets.ModelViewSet):
     """
     /api/transactions/ — CRUD for expense and income transactions
@@ -68,6 +74,9 @@ class BalanceSummaryView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        parameters=[MONTH_PARAMETER], responses=BalanceSummarySerializer
+    )
     def get(self, request):
         month_start = parse_month_param(request)
         return Response(

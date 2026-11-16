@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import CreditCard, CreditCardEntry
@@ -25,6 +26,7 @@ class CreditCardSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "planned_amount", "is_active", "actual_amount")
         read_only_fields = ("id", "is_active")  # mass-assignment defense
 
+    @extend_schema_field(serializers.DecimalField(max_digits=12, decimal_places=2))
     def get_actual_amount(self, obj):
         month = self.context.get("month", date.today().replace(day=1))
         return get_actual_amount(obj.id, month)

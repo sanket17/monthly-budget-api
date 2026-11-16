@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -126,6 +127,11 @@ class GenerateRecurringEntriesView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses=TransactionSerializer(many=True),
+        description="Generates this month's missing transactions; returns the newly created ones.",
+    )
     def post(self, request):
         current_month = today_for_user(request.user).replace(day=1)
         created = generate_for_user(request.user, upto_month=current_month)

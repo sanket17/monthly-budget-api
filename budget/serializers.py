@@ -1,5 +1,6 @@
 from datetime import date
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .models import Category, PlannedAmount
@@ -26,6 +27,7 @@ class CategorySerializer(serializers.ModelSerializer):
             "is_active",
         )  # mass-assignment defense — client never sets these
 
+    @extend_schema_field(serializers.DecimalField(max_digits=12, decimal_places=2))
     def get_planned_amount(self, obj):
         month = self.context.get("month", date.today().replace(day=1))
         return get_effective_amount(obj.id, month)

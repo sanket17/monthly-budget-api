@@ -1,6 +1,19 @@
 from datetime import date
 
+from drf_spectacular.utils import OpenApiParameter
 from rest_framework.exceptions import ValidationError
+
+# Documents parse_month_param's contract in the OpenAPI schema (G5).
+MONTH_PARAMETER = OpenApiParameter(
+    name="month",
+    type=str,
+    location=OpenApiParameter.QUERY,
+    required=False,
+    description=(
+        "Budget month as YYYY-MM (or YYYY-MM-DD, normalised to the 1st). "
+        "Defaults to the current month."
+    ),
+)
 
 
 def parse_month_param(request) -> date:
