@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -8,7 +9,15 @@ from recurring.urls import recurring_patterns
 from transactions.urls import transaction_patterns
 from users.urls import auth_patterns, user_patterns
 
+
+def healthz(request):
+    """Liveness probe for uptime monitors. Deliberately touches nothing
+    (no DB, no auth, no throttle) so it reports "process is up" only."""
+    return JsonResponse({"status": "ok"})
+
+
 urlpatterns = [
+    path("healthz/", healthz, name="healthz"),
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger-ui/",
