@@ -56,6 +56,18 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# API-only project, but drf-spectacular's Swagger UI page is an HTML template
+# found through APP_DIRS. Without this engine /api/schema/swagger-ui/ raises
+# TemplateDoesNotExist (500).
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {"context_processors": []},
+    }
+]
+
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
