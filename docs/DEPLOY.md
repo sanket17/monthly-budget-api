@@ -142,6 +142,17 @@ pinned in `deploy/known_hosts`, so there is no trust-on-first-use.
 2. Push to `main` (or re-run the workflow). Until the secret exists the deploy
    job fails fast with a clear message; the test job still runs.
 
+**Who can deploy / branch protection.** A push to `main` deploys, so whoever can push to
+`main` can deploy. The repo is owned by a personal account, where GitHub has no per-user
+push allowlist (that exists only for organization repos); access is controlled by the
+collaborator list: keep it to `sanket17` (admin) and `sanket17-amazatic` (write), and review
+Settings -> Collaborators (including pending invitations) now and then. On top of that,
+import `.github/rulesets/protect-main.json` (Settings -> Rules -> Rulesets -> New ruleset ->
+Import a ruleset): it blocks force-pushes and deletion of `main` but still allows normal direct
+pushes. Do not add "require pull request" or "require status checks" unless you also want to
+stop direct pushes by the non-admin account. Also set Settings -> Actions -> General ->
+"Require approval for all outside collaborators", since the repo is public.
+
 **Rotating the key:** `ssh-keygen -t ed25519 -N "" -f new_key`, replace the
 `github-actions-deploy` line in the VM's `~/.ssh/authorized_keys` (keep the
 `command="/usr/local/bin/budget-deploy",no-pty,...` prefix), update the secret.
