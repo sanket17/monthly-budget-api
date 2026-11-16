@@ -21,7 +21,8 @@ class TransactionViewSet(UserScopedMixin, viewsets.ModelViewSet):
     (or YYYY-MM-DD) selects the month (TXNS-05/06); omitting it defaults to
     the current month, matching the calendar-month budget period (CLAUDE.md
     data model constraint) and budget/views.py CategoryViewSet's
-    planned_amount default.
+    planned_amount default. The month window applies to the
+    list action only; detail actions address a transaction by id in any month.
     """
 
     queryset = Transaction.objects.all()
@@ -31,6 +32,12 @@ class TransactionViewSet(UserScopedMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+        if self.action != "list":
+            # The month window scopes browsing only. Detail routes
+            # (retrieve/update/delete) address one transaction by id and
+            # must reach it in any month, or a client that lists a
+            # historical month cannot edit or delete what it just listed.
+            return queryset
         month_start = parse_month_param(self.request)
         _, last_day = calendar.monthrange(month_start.year, month_start.month)
         month_end = month_start.replace(day=last_day)

@@ -152,3 +152,57 @@ class TestTransactionPagination:
         assert "results" in response.data
         assert response.data["count"] == 25
         assert len(response.data["results"]) == 20
+
+
+@pytest.mark.django_db
+class TestTransactionDetailAcrossMonths:
+    """
+    Regression (milestone audit G1): the ?month= filter scopes LIST only.
+    Detail routes must reach a transaction from any month, otherwise a
+    client that browses a historical month cannot edit or delete what it
+    just listed.
+    """
+
+    def _old_transaction(self, user):
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        return TransactionFactory(
+            category=category, user=user, amount="10.00", date=date(2020, 1, 15)
+        )
+
+    def test_retrieve_transaction_from_another_month(self, authenticated_client):
+        client, user = authenticated_client
+        txn = self._old_transaction(user)
+        response = client.get(reverse("transaction-detail", args=[txn.id]))
+        assert response.status_code == 200
+        assert response.data["id"] == txn.id
+
+    def test_edit_transaction_from_another_month(self, authenticated_client):
+        client, user = authenticated_client
+        txn = self._old_transaction(user)
+        response = client.patch(reverse("transaction-detail", args=[txn.id]), {"amount": "20.00"})
+        assert response.status_code == 200
+        txn.refresh_from_db()
+        assert txn.amount == Decimal("20.00")
+
+    def test_delete_transaction_from_another_month(self, authenticated_client):
+        client, user = authenticated_client
+        txn = self._old_transaction(user)
+        response = client.delete(reverse("transaction-detail", args=[txn.id]))
+        assert response.status_code == 204
+        assert not Transaction.objects.filter(id=txn.id).exists()
+
+    def test_list_is_still_scoped_to_the_requested_month(self, authenticated_client):
+        client, user = authenticated_client
+        txn = self._old_transaction(user)
+        in_month = client.get(reverse("transaction-list"), {"month": "2020-01"})
+        other_month = client.get(reverse("transaction-list"), {"month": "2020-02"})
+        assert [t["id"] for t in in_month.data["results"]] == [txn.id]
+        assert other_month.data["results"] == []
+
+    def test_other_users_transaction_from_another_month_is_still_404(
+        self, authenticated_client, user_factory
+    ):
+        client, _ = authenticated_client
+        txn = self._old_transaction(user_factory())
+        response = client.get(reverse("transaction-detail", args=[txn.id]))
+        assert response.status_code == 404
