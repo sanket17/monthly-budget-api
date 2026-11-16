@@ -206,3 +206,43 @@ class TestTransactionDetailAcrossMonths:
         txn = self._old_transaction(user_factory())
         response = client.get(reverse("transaction-detail", args=[txn.id]))
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+class TestIncomeTransactionEditDelete:
+    """TXNS-04: edit and delete income transactions (no income-specific code path
+    exists, but the behaviour is asserted rather than assumed)."""
+
+    def _income_transaction(self, user):
+        category = CategoryFactory(user=user, category_type="income", group=None)
+        return TransactionFactory(category=category, user=user, amount="500.00")
+
+    def test_edit_income_transaction(self, authenticated_client):
+        client, user = authenticated_client
+        txn = self._income_transaction(user)
+        response = client.patch(
+            reverse("transaction-detail", args=[txn.id]),
+            {"amount": "750.00", "description": "Raise"},
+        )
+        assert response.status_code == 200
+        txn.refresh_from_db()
+        assert txn.amount == Decimal("750.00")
+        assert txn.description == "Raise"
+        assert txn.category.category_type == "income"
+
+    def test_delete_income_transaction(self, authenticated_client):
+        client, user = authenticated_client
+        txn = self._income_transaction(user)
+        response = client.delete(reverse("transaction-detail", args=[txn.id]))
+        assert response.status_code == 204
+        assert not Transaction.objects.filter(id=txn.id).exists()
+
+    def test_cannot_edit_or_delete_other_users_income_transaction(
+        self, authenticated_client, user_factory
+    ):
+        client, _ = authenticated_client
+        txn = self._income_transaction(user_factory())
+        url = reverse("transaction-detail", args=[txn.id])
+        assert client.patch(url, {"amount": "1.00"}).status_code == 404
+        assert client.delete(url).status_code == 404
+        assert Transaction.objects.filter(id=txn.id).exists()
