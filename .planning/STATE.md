@@ -68,6 +68,7 @@ Recent decisions affecting current work:
 - Phase 5: Credit card spending has no effect on bank balance — bank balance stays Transaction-only; dashboard's own savings figure is a separate number that does subtract credit card actuals
 - Phase 5: Emergency fund balance now walks forward like bank balance (was a flat Phase 3 stub) — matched by case-insensitive category name, no new model field
 - Phase 6: PATCH on a recurring entry now locks the row (select_for_update inside an atomic update()) — ModelSerializer.update() re-saves the whole row, so a stale PATCH used to resurrect a concurrently soft-deleted entry (fixed 0631e68)
+- Tech-debt closure (2026-11-16): category_type is frozen once a category has transactions/planned amounts/recurring entries; recurring reactivate requires an active category; credit-card-entries list is month-windowed + paginated; a deleted category's planned amount counts only through its deletion month (`Category.deactivated_on`)
 - Phase 5: Data migration reverse operations must be irreversible when a later seed change reuses the renamed target — caught by code review (CR-01) on the "Redeem Emergency Fund" category rename
 
 ### Pending Todos
@@ -78,15 +79,14 @@ None yet.
 
 - None. (Day-31 question resolved in Phase 6: D-01 clamps to the month's last day.)
 
-## Session Continuity
-
-Last session: 2026-11-16T12:00:00.000Z
-Stopped at: Phase 6 complete — UAT passed, all phases done
-Resume file: None
-- Tech-debt closure (2026-11-16): category_type is frozen once a category has transactions/planned amounts/recurring entries; recurring reactivate requires an active category; credit-card-entries list is month-windowed + paginated; a deleted category's planned amount counts only through its deletion month (`Category.deactivated_on`)
-
 ### Quick Tasks Completed
 
 | Date | Slug | Result |
 |------|------|--------|
 | 2026-11-16 | close-v1-tech-debt | G3-G9, reactivate race, docs, lint closed; 213 tests pass (`.planning/quick/20261116-close-v1-tech-debt/`) |
+
+## Session Continuity
+
+Last session: 2026-11-16T12:00:00.000Z
+Stopped at: Phase 6 complete — UAT passed, all phases done
+Resume file: None
