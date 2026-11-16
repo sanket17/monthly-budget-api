@@ -65,10 +65,10 @@ def get_effective_amounts_for_user(
 ) -> dict[int, Decimal]:
     """
     Bulk version of get_effective_amount — ONE query regardless of
-    category count, avoids N+1 across ~49 categories. Not consumed by any
-    Phase 2 endpoint yet (each Category is serialized individually via
-    get_effective_amount); provided now so Phase 5's dashboard aggregation
-    can reuse it without re-deriving the query.
+    category count, avoids N+1 across ~49 categories. Consumed by
+    dashboard.services.get_dashboard for the planned totals and the
+    per-group expense breakdown (CategoryViewSet still serializes each
+    Category individually via get_effective_amount).
     """
     rows = PlannedAmount.objects.filter(
         user_id=user_id, effective_from__lte=month_start

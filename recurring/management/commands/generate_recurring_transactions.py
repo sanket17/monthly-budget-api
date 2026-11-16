@@ -27,9 +27,11 @@ class Command(BaseCommand):
     help = "Generate due Transactions for every user's active recurring entries."
 
     def handle(self, *args, **options):
-        users = User.objects.filter(
-            recurring_entries__is_active=True
-        ).distinct().order_by("timezone")
+        users = (
+            User.objects.filter(recurring_entries__is_active=True)
+            .distinct()
+            .order_by("timezone")
+        )
 
         total_created = 0
         for _timezone, group in itertools.groupby(users, key=lambda u: u.timezone):
@@ -37,14 +39,10 @@ class Command(BaseCommand):
                 try:
                     created = generate_for_user(user)
                 except Exception:
-                    logger.exception(
-                        "Recurring generation failed for user %s", user.id
-                    )
+                    logger.exception("Recurring generation failed for user %s", user.id)
                     continue
                 total_created += len(created)
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Generated {total_created} recurring transaction(s)."
-            )
+            self.style.SUCCESS(f"Generated {total_created} recurring transaction(s).")
         )

@@ -23,10 +23,10 @@ urlpatterns = [
     path("api/", include(budget_patterns)),
     # Transaction endpoints: /api/transactions/, /api/initial-balances/, /api/balance/
     path("api/", include(transaction_patterns)),
-    # Credit card endpoints: /api/credit-cards/ (router already prefixes credit-cards/)
+    # Credit card endpoints: /api/credit-cards/, /api/credit-card-entries/
     path("api/", include(credit_card_patterns)),
     # Dashboard endpoints: /api/dashboard/
     path("api/", include(dashboard_patterns)),
-    # Recurring entry endpoints: /api/recurring-entries/
+    # Recurring entry endpoints: /api/recurring-entries/, /api/recurring-entries/generate/
     path("api/", include(recurring_patterns)),
 ]

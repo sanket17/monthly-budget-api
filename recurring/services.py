@@ -16,9 +16,9 @@ timezone (D-03) — never the server clock or a global default.
 import calendar
 import logging
 from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from django.db import IntegrityError, transaction
-from zoneinfo import ZoneInfo
 
 from transactions.models import Transaction
 
@@ -73,9 +73,7 @@ def _generate_one(entry, scheduled_date: date, period: date):
                 description=entry.description,
                 recurring_entry=entry,
             )
-            RecurringGenerationLog.objects.create(
-                recurring_entry=entry, period=period
-            )
+            RecurringGenerationLog.objects.create(recurring_entry=entry, period=period)
     except IntegrityError as exc:
         diag = getattr(getattr(exc, "__cause__", None), "diag", None)
         constraint_name = getattr(diag, "constraint_name", None)
@@ -103,7 +101,9 @@ def generate_for_entry(entry, ceiling: date, today: date):
     D-09: the generated Transaction is always dated with its original
     scheduled date, never the date generation actually ran.
     """
-    creation_date_local = entry.created_at.astimezone(ZoneInfo(entry.user.timezone)).date()
+    creation_date_local = entry.created_at.astimezone(
+        ZoneInfo(entry.user.timezone)
+    ).date()
     creation_month = creation_date_local.replace(day=1)
     last_log = entry.generation_log.order_by("-period").first()
     if last_log is None:
