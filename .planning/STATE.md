@@ -83,3 +83,10 @@ None yet.
 Last session: 2026-11-16T12:00:00.000Z
 Stopped at: Phase 6 complete — UAT passed, all phases done
 Resume file: None
+- Tech-debt closure (2026-11-16): category_type is frozen once a category has transactions/planned amounts/recurring entries; recurring reactivate requires an active category; credit-card-entries list is month-windowed + paginated; a deleted category's planned amount counts only through its deletion month (`Category.deactivated_on`)
+
+### Quick Tasks Completed
+
+| Date | Slug | Result |
+|------|------|--------|
+| 2026-11-16 | close-v1-tech-debt | G3-G9, reactivate race, docs, lint closed; 213 tests pass (`.planning/quick/20261116-close-v1-tech-debt/`) |
