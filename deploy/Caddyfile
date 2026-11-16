@@ -1,0 +1,6 @@
+{$DOMAIN} {
+	encode gzip
+	# Caddy sets X-Forwarded-For/-Proto for the upstream; Django trusts
+	# exactly one proxy hop (NUM_PROXIES = 1 in settings/production.py).
+	reverse_proxy web:8000
+}
