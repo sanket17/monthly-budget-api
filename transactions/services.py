@@ -115,14 +115,15 @@ def get_bank_balance(user_id: int, month_start: date) -> dict[str, Decimal | Non
     except InitialBalance.DoesNotExist:
         return {"opening": None, "closing": None}
 
-    if month_start < anchor.effective_month:
+    anchor_month = anchor.effective_month.replace(day=1)
+    if month_start < anchor_month:
         return {"opening": None, "closing": None}
 
     monthly_totals = _monthly_income_expense_totals(
-        user_id, anchor.effective_month, month_start
+        user_id, anchor_month, month_start
     )
     running = anchor.amount
-    current = anchor.effective_month
+    current = anchor_month
     opening = running
     closing = running
     while True:
@@ -162,14 +163,15 @@ def get_emergency_fund_balance(
     except InitialBalance.DoesNotExist:
         return {"opening": None, "closing": None}
 
-    if month_start < anchor.effective_month:
+    anchor_month = anchor.effective_month.replace(day=1)
+    if month_start < anchor_month:
         return {"opening": None, "closing": None}
 
     monthly_totals = _monthly_emergency_fund_totals(
-        user_id, anchor.effective_month, month_start
+        user_id, anchor_month, month_start
     )
     running = anchor.amount
-    current = anchor.effective_month
+    current = anchor_month
     opening = running
     closing = running
     while True:

@@ -54,6 +54,13 @@ class InitialBalanceSerializer(serializers.ModelSerializer):
         fields = ("id", "balance_type", "amount", "effective_month", "created_at")
         read_only_fields = ("id", "created_at")
 
+    def validate_effective_month(self, value):
+        # effective_month is a calendar-month anchor (the balance walk is
+        # keyed on the 1st of each month). Normalise any day to the 1st,
+        # matching parse_month_param's YYYY-MM-DD handling, so a mid-month
+        # date can't make the walk skip the anchor month.
+        return value.replace(day=1)
+
     def create(self, validated_data):
         obj, _ = InitialBalance.objects.update_or_create(
             user=validated_data["user"],

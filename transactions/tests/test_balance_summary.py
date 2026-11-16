@@ -271,3 +271,46 @@ class TestBalanceSummaryEndpoint:
     def test_balance_summary_requires_authentication(self, api_client):
         response = api_client.get(reverse("balance-summary"))
         assert response.status_code == 401
+
+
+@pytest.mark.django_db
+class TestLegacyMidMonthAnchor:
+    """
+    Regression (milestone audit G2): an InitialBalance row already stored
+    with a mid-month effective_month (written before the serializer
+    normalised it) must still produce correct balances.
+    """
+
+    def test_bank_balance_with_mid_month_anchor_row(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="bank",
+            amount="1000.00",
+            effective_month=date(2026, 3, 15),
+        )
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        TransactionFactory(category=category, user=user, amount="100.00", date=date(2026, 3, 20))
+
+        march = get_bank_balance(user.id, date(2026, 3, 1))
+        april = get_bank_balance(user.id, date(2026, 4, 1))
+
+        assert march == {"opening": Decimal("1000.00"), "closing": Decimal("900.00")}
+        assert april == {"opening": Decimal("900.00"), "closing": Decimal("900.00")}
+
+    def test_emergency_fund_balance_with_mid_month_anchor_row(self, user_factory):
+        user = user_factory()
+        InitialBalanceFactory(
+            user=user,
+            balance_type="emergency_fund",
+            amount="500.00",
+            effective_month=date(2026, 3, 15),
+        )
+        category = CategoryFactory(
+            user=user, name="Emergency Fund", category_type="expense", group="investment"
+        )
+        TransactionFactory(category=category, user=user, amount="100.00", date=date(2026, 3, 20))
+
+        march = get_emergency_fund_balance(user.id, date(2026, 3, 1))
+
+        assert march == {"opening": Decimal("500.00"), "closing": Decimal("600.00")}
