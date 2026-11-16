@@ -18,10 +18,12 @@ from decimal import Decimal
 from django.db.models import Q, Sum
 from django.db.models.functions import TruncMonth
 
-from .models import InitialBalance, Transaction
+from budget.constants import (
+    EMERGENCY_FUND_EXPENSE_NAME,
+    REDEEM_EMERGENCY_FUND_INCOME_NAME,
+)
 
-EMERGENCY_FUND_EXPENSE_NAME = "Emergency Fund"
-REDEEM_EMERGENCY_FUND_INCOME_NAME = "Redeem Emergency Fund"
+from .models import InitialBalance, Transaction
 
 
 def _next_month(month_start: date) -> date:

@@ -30,6 +30,38 @@ class CategorySerializer(serializers.ModelSerializer):
         month = self.context.get("month", date.today().replace(day=1))
         return get_effective_amount(obj.id, month)
 
+    def _reject_type_change_with_history(self, data):
+        """
+        G3: flipping expense <-> income on a category that already has
+        transactions, recurring entries or planned amounts silently
+        rewrites history — every balance walk and dashboard total derives
+        its income/expense sign from category.category_type at read time
+        (a probe moved a bank closing balance 900 -> 1100). Reject it.
+
+        Moving an expense category between groups (needs/wants/...) is
+        still allowed: it only reclassifies the dashboard breakdown and
+        never touches a balance.
+        """
+        if self.instance is None:
+            return
+        new_type = data.get("category_type")
+        if new_type is None or new_type == self.instance.category_type:
+            return
+        from recurring.models import RecurringEntry
+
+        has_history = (
+            self.instance.transactions.exists()
+            or self.instance.planned_amounts.exists()
+            or RecurringEntry.all_objects.filter(category=self.instance).exists()
+        )
+        if has_history:
+            raise serializers.ValidationError(
+                {
+                    "category_type": "Cannot change the type of a category that "
+                    "has transactions, planned amounts or recurring entries."
+                }
+            )
+
     def validate(self, data):
         """
         Serializer-level backstop for the group_required_iff_expense
@@ -37,6 +69,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fast, user-facing 400 instead of a raw IntegrityError. The DB
         constraint (budget/models.py) remains the actual guarantee.
         """
+        self._reject_type_change_with_history(data)
         category_type = data.get(
             "category_type", getattr(self.instance, "category_type", None)
         )

@@ -110,6 +110,22 @@ class TestRecurringEntrySoftDeleteAndReactivate:
         entry.refresh_from_db()
         assert entry.is_active is True
 
+    def test_reactivate_rejected_when_category_was_soft_deleted(
+        self, authenticated_client
+    ):
+        """G4/D-15: an active entry may not point at a deleted category."""
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense")
+        entry = RecurringEntryFactory(user=user, category=category)
+        client.delete(reverse("recurring-entry-detail", args=[entry.id]))
+        client.delete(reverse("category-detail", args=[category.id]))
+
+        response = client.patch(reverse("recurring-entry-reactivate", args=[entry.id]))
+
+        assert response.status_code == 400
+        entry.refresh_from_db()
+        assert entry.is_active is False
+
     def test_reactivate_other_users_entry_returns_404(self, authenticated_client):
         client, _ = authenticated_client
         user_a = UserFactory()
@@ -391,3 +407,63 @@ class TestConcurrentEditAndDelete:
         final = RecurringEntry.all_objects.get(pk=entry.pk)
         assert final.is_active is False
         assert final.amount == Decimal("250.00")
+
+
+@pytest.mark.django_db(transaction=True)
+class TestConcurrentReactivateAndCategoryDelete:
+    """
+    G4 race: DELETE category checks "no active entries" while a concurrent
+    reactivate flips an entry active. Both serialize on the category row
+    lock, so the invariant "no active entry points at a deleted category"
+    must hold for every interleaving.
+    """
+
+    ITERATIONS = 15
+
+    def test_never_leaves_active_entry_on_deleted_category(self):
+        user = UserFactory()
+        for _ in range(self.ITERATIONS):
+            category = CategoryFactory(user=user, category_type="expense")
+            entry = RecurringEntryFactory(
+                user=user, category=category, is_active=False
+            )
+            barrier = threading.Barrier(2)
+            statuses = {}
+            errors = []
+
+            def call(name, method, url):
+                try:
+                    client = APIClient()
+                    client.force_authenticate(user=user)
+                    barrier.wait(timeout=10)
+                    statuses[name] = getattr(client, method)(url).status_code
+                except Exception as exc:  # pragma: no cover
+                    errors.append(exc)
+                finally:
+                    connection.close()
+
+            threads = [
+                threading.Thread(
+                    target=call,
+                    args=(
+                        "reactivate",
+                        "patch",
+                        reverse("recurring-entry-reactivate", args=[entry.id]),
+                    ),
+                ),
+                threading.Thread(
+                    target=call,
+                    args=("delete", "delete", reverse("category-detail", args=[category.id])),
+                ),
+            ]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+
+            assert errors == []
+            category.refresh_from_db()
+            entry.refresh_from_db()
+            assert not (entry.is_active and not category.is_active), statuses
+            # Exactly one side wins: reactivate (200) XOR category delete (204).
+            assert sorted(statuses.values()) in ([200, 400], [204, 400]), statuses

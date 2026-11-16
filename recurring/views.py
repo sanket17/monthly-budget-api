@@ -2,10 +2,12 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from budget.models import Category
 from transactions.serializers import TransactionSerializer
 from users.mixins import UserScopedMixin
 
@@ -75,11 +77,30 @@ class RecurringEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
         so `user=request.user` is re-asserted explicitly — a crafted pk
         belonging to another user 404s instead of leaking existence.
         """
-        instance = get_object_or_404(
-            RecurringEntry.all_objects, pk=pk, user=request.user
-        )
-        instance.is_active = True
-        instance.save(update_fields=["is_active"])
+        with transaction.atomic():
+            # Row lock for the read-modify-write (same lost-update class as
+            # update() above): a concurrent PATCH/DELETE cannot interleave.
+            instance = get_object_or_404(
+                RecurringEntry.all_objects.select_for_update(),
+                pk=pk,
+                user=request.user,
+            )
+            # G4/D-15: an entry may only be active while its category is.
+            # Lock the category row too, so CategoryViewSet.perform_destroy
+            # (which locks it, then looks for active entries) and this
+            # action cannot both succeed against each other. Lock order is
+            # entry -> category; perform_destroy never locks entries, so
+            # there is no deadlock cycle.
+            category = Category.all_objects.select_for_update().get(
+                pk=instance.category_id
+            )
+            if not category.is_active:
+                raise ValidationError(
+                    "Cannot reactivate a recurring entry whose category has "
+                    "been deleted. Pick an active category first."
+                )
+            instance.is_active = True
+            instance.save(update_fields=["is_active"])
         return Response(self.get_serializer(instance).data)
 
 

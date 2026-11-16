@@ -141,3 +141,103 @@ class TestCrossUserIsolation:
         assert response.status_code == 404
         category_a.refresh_from_db()
         assert category_a.is_active is True
+
+
+@pytest.mark.django_db
+class TestCategoryTypeIsFrozenOnceItHasHistory:
+    """G3: expense <-> income flips would silently rewrite every balance."""
+
+    def _url(self, category):
+        return reverse("category-detail", args=[category.id])
+
+    def test_cannot_flip_type_when_category_has_transactions(
+        self, authenticated_client
+    ):
+        from transactions.tests.factories import TransactionFactory
+
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        TransactionFactory(user=user, category=category)
+
+        response = client.patch(
+            self._url(category), {"category_type": "income", "group": None}, format="json"
+        )
+
+        assert response.status_code == 400
+        assert "category_type" in response.data
+        category.refresh_from_db()
+        assert (category.category_type, category.group) == ("expense", "needs")
+
+    def test_cannot_flip_type_when_category_has_planned_amount(
+        self, authenticated_client
+    ):
+        from budget.tests.factories import PlannedAmountFactory
+
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        PlannedAmountFactory(category=category)
+
+        response = client.patch(
+            self._url(category), {"category_type": "income", "group": None}, format="json"
+        )
+
+        assert response.status_code == 400
+        assert "category_type" in response.data
+
+    def test_cannot_flip_type_when_category_has_inactive_recurring_entry(
+        self, authenticated_client
+    ):
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        RecurringEntryFactory(user=user, category=category, is_active=False)
+
+        response = client.patch(
+            self._url(category), {"category_type": "income", "group": None}, format="json"
+        )
+
+        assert response.status_code == 400
+        assert "category_type" in response.data
+
+    def test_can_flip_type_when_category_has_no_history(self, authenticated_client):
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+
+        response = client.patch(
+            self._url(category), {"category_type": "income", "group": None}, format="json"
+        )
+
+        assert response.status_code == 200
+        category.refresh_from_db()
+        assert (category.category_type, category.group) == ("income", None)
+
+    def test_can_move_group_and_rename_with_transactions(self, authenticated_client):
+        from transactions.tests.factories import TransactionFactory
+
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        TransactionFactory(user=user, category=category)
+
+        response = client.patch(
+            self._url(category), {"group": "wants", "name": "Renamed"}, format="json"
+        )
+
+        assert response.status_code == 200
+        category.refresh_from_db()
+        assert (category.group, category.name) == ("wants", "Renamed")
+
+    def test_put_resending_same_type_is_allowed_with_transactions(
+        self, authenticated_client
+    ):
+        from transactions.tests.factories import TransactionFactory
+
+        client, user = authenticated_client
+        category = CategoryFactory(user=user, category_type="expense", group="needs")
+        TransactionFactory(user=user, category=category)
+
+        response = client.put(
+            self._url(category),
+            {"name": "Same type", "category_type": "expense", "group": "needs"},
+            format="json",
+        )
+
+        assert response.status_code == 200

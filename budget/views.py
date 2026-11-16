@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -31,7 +32,12 @@ class CategoryViewSet(UserScopedMixin, viewsets.ModelViewSet):
         context["month"] = parse_month_param(self.request)
         return context
 
+    @transaction.atomic
     def perform_destroy(self, instance):
+        # Lock the category row first so a concurrent recurring `reactivate`
+        # (which locks the same row before activating an entry) is
+        # serialized against the active-entry check below (G4 race).
+        instance = Category.all_objects.select_for_update().get(pk=instance.pk)
         # D-15: a category referenced by an active RecurringEntry cannot be
         # soft-deleted — reject before touching is_active. instance is
         # already scoped to request.user via UserScopedMixin, so this check
