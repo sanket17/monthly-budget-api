@@ -40,8 +40,8 @@ class TestRegistrationTimezone:
         assert "Unknown timezone." in str(response.data)
         from django.contrib.auth import get_user_model
 
-        User = get_user_model()
-        assert not User.objects.filter(email="tz-invalid@example.com").exists()
+        user_model = get_user_model()
+        assert not user_model.objects.filter(email="tz-invalid@example.com").exists()
 
 
 @pytest.mark.django_db

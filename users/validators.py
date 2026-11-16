@@ -1,5 +1,6 @@
-from rest_framework import serializers
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from rest_framework import serializers
 
 
 def validate_iana_timezone(value):

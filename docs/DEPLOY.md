@@ -55,7 +55,7 @@ sudo mkdir -p /opt/budget && sudo chown $USER /opt/budget
 git clone git@github.com:sanket17/monthly-budget-api.git /opt/budget
 ```
 
-The repo is private, so add the VM's SSH public key (`ssh-keygen`, then
+If the repo is private, add the VM's SSH public key (`ssh-keygen`, then
 `cat ~/.ssh/id_ed25519.pub`) as a **read-only deploy key** in the GitHub repo
 settings first.
 
@@ -115,6 +115,40 @@ ssh -i ~/.ssh/budget_oracle ubuntu@VM_IP 'cd /opt/budget &&
   docker compose -f docker-compose.prod.yml run --rm web python manage.py migrate &&
   docker compose -f docker-compose.prod.yml up -d'
 ```
+
+## CI/CD (GitHub Actions)
+
+`.github/workflows/ci-deploy.yml`: every push and pull request runs ruff, the
+migration-drift check and the test suite against Postgres. A push to `main`
+that passes then deploys to the VM. Pull requests never deploy (the repo is
+public, so fork PRs must not be able to reach secrets).
+
+How the deploy works: the job streams `git archive HEAD` over SSH to the VM.
+The CI key is bound in `~/.ssh/authorized_keys` to a forced command,
+`/usr/local/bin/budget-deploy` (source: `deploy/remote-deploy.sh`, root-owned so
+a deploy cannot rewrite it). That key cannot open a shell, run other commands or
+forward ports. The script swaps the app tree (keeping `.env` and `backups/`),
+builds, runs `migrate`, restarts, waits for the container to be healthy and, if
+it is not, re-tags the previous image (migrations are not reverted). The job
+then checks `https://api.paise-kuthe-gele.com/healthz/`. The VM host key is
+pinned in `deploy/known_hosts`, so there is no trust-on-first-use.
+
+**One-time setup** (repository admin only):
+
+1. GitHub repo -> Settings -> Secrets and variables -> Actions -> New repository
+   secret. Name: `DEPLOY_SSH_KEY`. Value: the whole private key file
+   (`~/.ssh/budget_ci_deploy`, including the BEGIN/END lines). Or, if `gh` is
+   logged in as an admin of the repo: `gh secret set DEPLOY_SSH_KEY < ~/.ssh/budget_ci_deploy`.
+2. Push to `main` (or re-run the workflow). Until the secret exists the deploy
+   job fails fast with a clear message; the test job still runs.
+
+**Rotating the key:** `ssh-keygen -t ed25519 -N "" -f new_key`, replace the
+`github-actions-deploy` line in the VM's `~/.ssh/authorized_keys` (keep the
+`command="/usr/local/bin/budget-deploy",no-pty,...` prefix), update the secret.
+
+**Changing the deploy script:** it lives on the VM outside the deployed tree on
+purpose. After editing `deploy/remote-deploy.sh`, reinstall it by hand:
+`scp deploy/remote-deploy.sh VM:/tmp/ && ssh VM 'sudo install -o root -g root -m 755 /tmp/remote-deploy.sh /usr/local/bin/budget-deploy'`.
 
 ## 8. Backups
 
