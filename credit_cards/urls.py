@@ -1,8 +1,8 @@
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from .views import CreditCardEntryViewSet, CreditCardViewSet
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register("credit-cards", CreditCardViewSet, basename="credit-card")
 router.register("credit-card-entries", CreditCardEntryViewSet, basename="credit-card-entry")
 

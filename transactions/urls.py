@@ -1,9 +1,9 @@
 from django.urls import path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from .views import BalanceSummaryView, InitialBalanceViewSet, TransactionViewSet
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register("transactions", TransactionViewSet, basename="transaction")
 router.register("initial-balances", InitialBalanceViewSet, basename="initial-balance")
 

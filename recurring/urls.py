@@ -1,9 +1,9 @@
 from django.urls import path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from .views import GenerateRecurringEntriesView, RecurringEntryViewSet
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register("recurring-entries", RecurringEntryViewSet, basename="recurring-entry")
 
 # NOTE: the explicit generate/ path MUST precede router.urls. DRF's default
