@@ -16,18 +16,26 @@ D-12, D-14, D-19).
 """
 
 import calendar
+import logging
 import threading
-from datetime import date, datetime, timezone as dt_timezone
+from datetime import date, datetime
+from datetime import timezone as dt_timezone
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 import pytest
 from django.core.management import call_command
-from django.db import connection
+from django.db import IntegrityError, connection
 
 from budget.tests.factories import CategoryFactory
 from recurring.models import RecurringEntry, RecurringGenerationLog
-from recurring.services import generate_for_user, scheduled_date_for, today_for_user
+from recurring.services import (
+    _generate_one,
+    generate_for_entry,
+    generate_for_user,
+    scheduled_date_for,
+    today_for_user,
+)
 from recurring.tests.factories import RecurringEntryFactory
 from transactions.models import Transaction
 from transactions.serializers import TransactionSerializer
@@ -60,9 +68,7 @@ class TestGenerationCore:
 
         assert len(created) == 1
         assert created[0].recurring_entry_id == entry.id
-        assert (
-            RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
-        )
+        assert RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
 
         created_again = generate_for_user(user)
 
@@ -136,9 +142,7 @@ class TestGenerationHardening:
         expected_months = [_months_before(current_month_start, n) for n in (3, 2, 1, 0)]
         created_dates = sorted(t.date for t in created)
         assert created_dates == expected_months
-        assert (
-            RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 4
-        )
+        assert RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 4
 
     def test_does_not_backfill_creation_month_if_day_already_passed(self):
         user = UserFactory()
@@ -228,9 +232,7 @@ class TestGenerationIdempotencyAndEditSemantics:
 
         assert created_again == []
         assert Transaction.objects.filter(recurring_entry=entry).count() == 0
-        assert (
-            RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
-        )
+        assert RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
 
     @pytest.mark.django_db(transaction=True)
     def test_concurrent_generation_no_duplicate(self):
@@ -258,9 +260,7 @@ class TestGenerationIdempotencyAndEditSemantics:
 
         assert errors == []
         assert Transaction.objects.filter(recurring_entry=entry).count() == 1
-        assert (
-            RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
-        )
+        assert RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
 
     def test_editing_amount_affects_future_generation_only(self):
         user = UserFactory()
@@ -298,7 +298,9 @@ class TestGenerationIdempotencyAndEditSemantics:
         user = UserFactory()
         category = CategoryFactory(user=user, category_type="expense")
         today_day = date.today().day
-        entry = RecurringEntryFactory(user=user, category=category, day_of_month=today_day)
+        entry = RecurringEntryFactory(
+            user=user, category=category, day_of_month=today_day
+        )
 
         first_run = generate_for_user(user)
         assert len(first_run) == 1
@@ -311,3 +313,166 @@ class TestGenerationIdempotencyAndEditSemantics:
 
         assert second_run == []
         assert Transaction.objects.filter(recurring_entry=entry).count() == 1
+
+
+def _entry_created_at(timezone_name: str, created_at_utc: datetime, day_of_month: int):
+    """
+    Build an expense RecurringEntry owned by a user in timezone_name and
+    force its created_at to a known UTC instant (auto_now_add can't be set
+    through the factory), then reload so the in-memory instance carries it.
+    """
+    user = UserFactory(timezone=timezone_name)
+    category = CategoryFactory(user=user, category_type="expense")
+    entry = RecurringEntryFactory(
+        user=user, category=category, day_of_month=day_of_month
+    )
+    RecurringEntry.all_objects.filter(pk=entry.pk).update(created_at=created_at_utc)
+    entry.refresh_from_db()
+    return entry
+
+
+@pytest.mark.django_db
+class TestGenerationNonUtcCreationBoundary:
+    """
+    UAT 06 #1 (06-REVIEW WR-01): the D-10 creation-month boundary must be
+    decided on the entry owner's local calendar day, not the UTC day.
+    generate_for_entry is called directly with explicit ceiling/today so
+    the scenarios are fully deterministic (no dependence on the real clock).
+    Every scenario is chosen so the pre-fix UTC-date comparison would give
+    the opposite answer.
+    """
+
+    def test_east_of_utc_local_day_ahead_skips_creation_month(self):
+        # Pacific/Kiritimati is UTC+14: 2026-03-10 12:00Z is 2026-03-11 02:00 local.
+        # Scheduled day 10 already passed locally -> D-10 says skip March.
+        # (Comparing against the UTC date, 03-10, would wrongly generate it.)
+        entry = _entry_created_at(
+            "Pacific/Kiritimati",
+            datetime(2026, 3, 10, 12, 0, tzinfo=dt_timezone.utc),
+            day_of_month=10,
+        )
+
+        created = generate_for_entry(
+            entry, ceiling=date(2026, 3, 1), today=date(2026, 3, 31)
+        )
+
+        assert created == []
+        assert Transaction.objects.filter(recurring_entry=entry).count() == 0
+        assert not RecurringGenerationLog.objects.filter(recurring_entry=entry).exists()
+
+    def test_west_of_utc_local_day_behind_generates_on_inclusive_boundary(self):
+        # Pacific/Pago_Pago is UTC-11: 2026-03-10 05:00Z is 2026-03-09 18:00 local.
+        # Scheduled day 9 == local creation day -> inclusive boundary generates.
+        # (Comparing against the UTC date, 03-10, would wrongly skip it.)
+        entry = _entry_created_at(
+            "Pacific/Pago_Pago",
+            datetime(2026, 3, 10, 5, 0, tzinfo=dt_timezone.utc),
+            day_of_month=9,
+        )
+
+        created = generate_for_entry(
+            entry, ceiling=date(2026, 3, 1), today=date(2026, 3, 31)
+        )
+
+        assert [t.date for t in created] == [date(2026, 3, 9)]
+
+    def test_creation_month_follows_local_month_across_month_end(self):
+        # 2026-03-31 12:00Z is already 2026-04-01 02:00 in Kiritimati, so the
+        # entry's creation month is April, not March: no March backfill.
+        entry = _entry_created_at(
+            "Pacific/Kiritimati",
+            datetime(2026, 3, 31, 12, 0, tzinfo=dt_timezone.utc),
+            day_of_month=31,
+        )
+
+        created = generate_for_entry(
+            entry, ceiling=date(2026, 4, 1), today=date(2026, 4, 30)
+        )
+
+        assert [t.date for t in created] == [date(2026, 4, 30)]
+        periods = list(
+            RecurringGenerationLog.objects.filter(recurring_entry=entry).values_list(
+                "period", flat=True
+            )
+        )
+        assert periods == [date(2026, 4, 1)]
+
+
+@pytest.mark.django_db
+class TestGenerateOneIntegrityHandling:
+    """
+    UAT 06 #2 (06-REVIEW WR-02): _generate_one swallows ONLY an
+    IntegrityError on unique_generation_per_entry_period. Any other
+    IntegrityError must propagate, and generate_for_user must isolate it.
+    Uses real Postgres errors so psycopg's diag.constraint_name is the
+    genuine value, not a hand-built stand-in.
+    """
+
+    SCHEDULED = date(2026, 3, 5)
+    PERIOD = date(2026, 3, 1)
+
+    def _entry(self):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        return RecurringEntryFactory(user=user, category=category, day_of_month=5)
+
+    def test_matching_constraint_is_swallowed_as_idempotent_noop(self):
+        entry = self._entry()
+        RecurringGenerationLog.objects.create(recurring_entry=entry, period=self.PERIOD)
+
+        result = _generate_one(entry, self.SCHEDULED, self.PERIOD)
+
+        assert result is None
+        # The atomic block rolled the Transaction back with the failed log insert.
+        assert Transaction.objects.filter(recurring_entry=entry).count() == 0
+        assert RecurringGenerationLog.objects.filter(recurring_entry=entry).count() == 1
+
+    def test_non_matching_integrity_error_is_reraised(self):
+        entry = self._entry()
+        entry.amount = None  # in-memory only: real NOT NULL violation on insert
+
+        with pytest.raises(IntegrityError) as exc_info:
+            _generate_one(entry, self.SCHEDULED, self.PERIOD)
+
+        diag = exc_info.value.__cause__.diag
+        assert diag.constraint_name != "unique_generation_per_entry_period"
+        assert Transaction.objects.filter(recurring_entry_id=entry.pk).count() == 0
+        assert not RecurringGenerationLog.objects.filter(
+            recurring_entry_id=entry.pk
+        ).exists()
+
+    def test_generate_for_user_isolates_non_matching_integrity_error(
+        self, monkeypatch, caplog
+    ):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+        today_day = date.today().day
+        failing = RecurringEntryFactory(
+            user=user, category=category, day_of_month=today_day
+        )
+        healthy = RecurringEntryFactory(
+            user=user, category=category, day_of_month=today_day
+        )
+
+        real_create = Transaction.objects.create
+
+        def create_with_null_amount_for_failing(**kwargs):
+            if kwargs["recurring_entry"].pk == failing.pk:
+                kwargs["amount"] = None  # real NOT NULL violation from Postgres
+            return real_create(**kwargs)
+
+        monkeypatch.setattr(
+            Transaction.objects, "create", create_with_null_amount_for_failing
+        )
+
+        with caplog.at_level(logging.ERROR, logger="recurring.services"):
+            created = generate_for_user(user)
+
+        assert [t.recurring_entry_id for t in created] == [healthy.pk]
+        assert not RecurringGenerationLog.objects.filter(
+            recurring_entry=failing
+        ).exists()
+        assert any(
+            "Recurring generation failed for entry" in record.getMessage()
+            for record in caplog.records
+        )

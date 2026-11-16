@@ -5,10 +5,14 @@ for RecurringEntry (RECR-01/02/03/05, D-12/13/14/16/17/18, D-22..26).
 Mirrors budget/tests/test_categories.py's class/fixture structure.
 """
 
+import threading
 from datetime import date
+from decimal import Decimal
 
 import pytest
+from django.db import connection
 from django.urls import reverse
+from rest_framework.test import APIClient
 
 from budget.tests.factories import CategoryFactory
 from recurring.models import RecurringEntry
@@ -234,3 +238,79 @@ class TestGenerateEndpoint:
     def test_generate_endpoint_requires_authentication(self, api_client):
         response = api_client.post(reverse("recurring-generate"))
         assert response.status_code == 401
+
+
+@pytest.mark.django_db(transaction=True)
+class TestConcurrentEditAndDelete:
+    """
+    UAT 06 #3 (06-02-PLAN must_have, verification: backstop): a PATCH and a
+    DELETE hitting the same recurring entry at the same instant must never
+    produce a server error or a corrupted row. Outcome is last-write-wins
+    on a single row, so either order is acceptable; the invariants below
+    hold for both. Real threads + real commits (transaction=True) against
+    Postgres; a Barrier lines both requests up to maximise overlap, and
+    the scenario repeats to sample different interleavings.
+    """
+
+    ITERATIONS = 10
+
+    def _race(self, user, entry):
+        url = reverse("recurring-entry-detail", args=[entry.id])
+        barrier = threading.Barrier(2)
+        statuses = {}
+        errors = []
+
+        def call(name, method, payload):
+            try:
+                client = APIClient()
+                client.force_authenticate(user=user)
+                barrier.wait(timeout=10)
+                response = getattr(client, method)(url, payload, format="json")
+                statuses[name] = response.status_code
+            except Exception as exc:  # pragma: no cover - surfaced via errors list
+                errors.append(exc)
+            finally:
+                connection.close()
+
+        threads = [
+            threading.Thread(
+                target=call, args=("patch", "patch", {"amount": "250.00"})
+            ),
+            threading.Thread(target=call, args=("delete", "delete", None)),
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        return statuses, errors
+
+    def test_concurrent_patch_and_delete_leave_row_consistent(self):
+        user = UserFactory()
+        category = CategoryFactory(user=user, category_type="expense")
+
+        for _ in range(self.ITERATIONS):
+            entry = RecurringEntryFactory(
+                user=user, category=category, amount="100.00", day_of_month=7
+            )
+
+            statuses, errors = self._race(user, entry)
+
+            assert errors == []
+            # DELETE is a soft delete: always succeeds, idempotent.
+            assert statuses["delete"] == 204
+            # PATCH either won the race (200) or ran after the soft delete,
+            # when the active-only queryset no longer sees the row (404).
+            assert statuses["patch"] in (200, 404)
+
+            # Exactly one row, never hard-deleted, never duplicated.
+            rows = RecurringEntry.all_objects.filter(pk=entry.pk)
+            assert rows.count() == 1
+            final = rows.get()
+            # Untouched fields are intact; amount is cleanly old or new.
+            assert final.user_id == user.id
+            assert final.category_id == category.id
+            assert final.day_of_month == 7
+            assert final.amount in (Decimal("100.00"), Decimal("250.00"))
+            if statuses["patch"] == 404:
+                assert final.amount == Decimal("100.00")
+                assert final.is_active is False
