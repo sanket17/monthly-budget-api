@@ -65,16 +65,21 @@ def get_dashboard(user_id: int, month_start: date) -> dict:
     # DASH-03/04: planned totals split by category_type. all_objects (NOT
     # the active-only `objects` manager) — a soft-deleted category's
     # historical PlannedAmount rows must still count toward its
-    # category_type's total (D-08's active-only exclusion is stated
-    # explicitly ONLY for credit cards, never for categories).
+    # category_type's total for the months it was alive (D-08's active-only
+    # exclusion is stated explicitly ONLY for credit cards, never for
+    # categories). G9: from the month AFTER it was deleted its carried-
+    # forward planned amount no longer counts — otherwise a deleted
+    # category would inflate every future month's planned totals forever.
+    # Rows with no deactivated_on (soft-deleted outside the API) keep the
+    # old always-count behaviour.
     #
     # DASH-02: this lookup also carries "group" so it can be reused below
     # for the expense_breakdown split, rather than adding a second, separate
     # query for the same rows.
     category_lookup = {
-        row["id"]: (row["category_type"], row["group"])
+        row["id"]: (row["category_type"], row["group"], row["deactivated_on"])
         for row in Category.all_objects.filter(user_id=user_id).values(
-            "id", "category_type", "group"
+            "id", "category_type", "group", "deactivated_on"
         )
     }
     planned_amounts_by_category = get_effective_amounts_for_user(user_id, month_start)
@@ -82,7 +87,11 @@ def get_dashboard(user_id: int, month_start: date) -> dict:
     income_planned_total = Decimal("0.00")
     planned_by_group: dict[str, Decimal] = {}
     for category_id, amount in planned_amounts_by_category.items():
-        category_type, group = category_lookup.get(category_id, (None, None))
+        category_type, group, deactivated_on = category_lookup.get(
+            category_id, (None, None, None)
+        )
+        if deactivated_on is not None and deactivated_on.replace(day=1) < month_start:
+            continue
         if category_type == "expense":
             expense_planned_total += amount
             if group:

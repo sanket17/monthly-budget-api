@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
+from recurring.services import today_for_user
 from users.mixins import UserScopedMixin
 
 from .models import Category, PlannedAmount
@@ -54,7 +55,8 @@ class CategoryViewSet(UserScopedMixin, viewsets.ModelViewSet):
                 "entry. Change or delete the recurring entry first."
             )
         instance.is_active = False
-        instance.save(update_fields=["is_active"])
+        instance.deactivated_on = today_for_user(instance.user)
+        instance.save(update_fields=["is_active", "deactivated_on"])
 
 
 class PlannedAmountViewSet(UserScopedMixin, viewsets.ModelViewSet):

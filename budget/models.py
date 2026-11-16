@@ -39,6 +39,11 @@ class Category(models.Model):
         max_length=12, choices=Group.choices, null=True, blank=True
     )
     is_active = models.BooleanField(default=True)
+    # Local calendar date (the owner's timezone) the category was soft
+    # deleted. NULL while active, and for rows soft-deleted outside the API
+    # before this column existed. The dashboard stops counting a deleted
+    # category's carried-forward PlannedAmount after this month (G9).
+    deactivated_on = models.DateField(null=True, blank=True)
 
     objects = ActiveCategoryManager()
     all_objects = models.Manager()

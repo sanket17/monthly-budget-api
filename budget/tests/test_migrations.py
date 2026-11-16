@@ -97,3 +97,29 @@ class TestRedeemedEmergencyRenameMigration:
 
         expense_category.refresh_from_db()
         assert expense_category.name == "Redeemed Emergency"
+
+
+_deactivated_on_migration = importlib.import_module(
+    "budget.migrations.0003_category_deactivated_on"
+)
+
+
+@pytest.mark.django_db
+class TestDeactivatedOnBackfillMigration:
+    def test_stamps_only_soft_deleted_rows_without_a_date(self):
+        from datetime import date
+
+        old_deleted = CategoryFactory(is_active=False, deactivated_on=None)
+        dated_deleted = CategoryFactory(
+            is_active=False, deactivated_on=date(2026, 1, 20)
+        )
+        active = CategoryFactory(is_active=True, deactivated_on=None)
+
+        _deactivated_on_migration.backfill_deactivated_on(django_apps, _FakeSchemaEditor)
+
+        old_deleted.refresh_from_db()
+        dated_deleted.refresh_from_db()
+        active.refresh_from_db()
+        assert old_deleted.deactivated_on is not None
+        assert dated_deleted.deactivated_on == date(2026, 1, 20)
+        assert active.deactivated_on is None
