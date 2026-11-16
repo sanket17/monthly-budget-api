@@ -1,10 +1,14 @@
+import calendar
+
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
 from budget.utils import parse_month_param
 from users.mixins import UserScopedMixin
 
 from .models import CreditCard, CreditCardEntry
+from .pagination import CreditCardEntryPagination
 from .serializers import CreditCardEntrySerializer, CreditCardSerializer
 
 
@@ -39,8 +43,31 @@ class CreditCardEntryViewSet(UserScopedMixin, viewsets.ModelViewSet):
     /api/credit-card-entries/ — CRUD for credit card expense entries
     (CARD-03/04). Hard delete — no history requirement, same as
     transactions/views.py TransactionViewSet.
+
+    The list is paginated and, like TransactionViewSet, windowed to one
+    calendar month: ?month=YYYY-MM (or YYYY-MM-DD), defaulting to the
+    current month. ?card=<id> narrows it to one card. Both apply to the
+    list action only; detail routes address an entry by id in any month.
     """
 
     queryset = CreditCardEntry.objects.all()
     serializer_class = CreditCardEntrySerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = CreditCardEntryPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action != "list":
+            return queryset
+        month_start = parse_month_param(self.request)
+        _, last_day = calendar.monthrange(month_start.year, month_start.month)
+        queryset = queryset.filter(
+            date__gte=month_start, date__lte=month_start.replace(day=last_day)
+        )
+        card = self.request.query_params.get("card")
+        if card is not None:
+            try:
+                queryset = queryset.filter(card_id=int(card))
+            except ValueError:
+                raise ValidationError({"card": "Must be a card id."})
+        return queryset

@@ -58,7 +58,7 @@ class TestListsAreUserScoped:
         response = client.get(reverse("credit-card-entry-list"))
 
         assert response.status_code == 200
-        assert [e["id"] for e in response.data] == [mine.id]
+        assert [e["id"] for e in response.data["results"]] == [mine.id]
 
 
 @pytest.mark.django_db
